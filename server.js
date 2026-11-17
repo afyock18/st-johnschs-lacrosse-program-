@@ -337,13 +337,10 @@ app.get('/admin', (req, res) => {
   return res.sendFile(ADMIN_FILE);
 });
 
-app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
-
-app.use((req, res) => res.redirect('/login'));
-
 // TEMPORARY test scaffold — removed before delivery. Guarded by the
 // BOOTSTRAP_TOKEN env var; only used to recover the test admin account
 // whose password was lost when an earlier test script crashed.
+// NOTE: must be registered BEFORE the /api 404 catch-all below.
 if (process.env.BOOTSTRAP_TOKEN) {
   app.post('/api/bootstrap', async (req, res) => {
     const { token, action, email, newPassword } = req.body || {};
@@ -369,6 +366,10 @@ if (process.env.BOOTSTRAP_TOKEN) {
     }
   });
 }
+
+app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
+
+app.use((req, res) => res.redirect('/login'));
 
 app.listen(PORT, async () => {
   console.log('Listening on port ' + PORT);
