@@ -83,8 +83,8 @@ summary{cursor:pointer;font-weight:700;min-height:2.25rem;display:flex;align-ite
 </style>
 </head>
 <body>
-<header class="topbar"><div class="topbar-in"><span class="brand">St. John&rsquo;s Lacrosse</span><nav class="tabs" id="mainTabs"></nav></div></header>
-<div class="shared-note"><b>Shared view</b> — use every feature in your own browser. Your changes stay on your device and reset when you reload. Only Aleric can update this program.</div>
+<header class="topbar"><div class="topbar-in"><span class="brand">St. John&rsquo;s Lacrosse</span><nav class="tabs" id="mainTabs"></nav><span id="saveState" style="font-size:.8rem;color:var(--mut);white-space:nowrap">Loading…</span></div></header>
+<div class="shared-note"><b>Shared program</b> — you are signed in, so changes you make are saved for everyone with access, on any device.</div>
 <main class="wrap">
 <div id="app"></div>
 </main>
@@ -150,7 +150,7 @@ function sheetHTML(p){
 function mastHTML(p,color){var start=parseTime(p.start||'15:30');return '<div class="mast" style="background:'+color+'">'+(S.logo?'<img src="'+S.logo+'" alt="Team logo" style="height:44px;float:right;background:#fff;border-radius:6px">':'')+'<div style="font-size:1.4rem;font-weight:700">'+esc(p.title||'Practice Plan')+'</div><div>St. John\'s Lacrosse</div></div><div class="goldrule"></div><p><b>Date:</b> '+esc(p.date||'')+' &nbsp; <b>Time:</b> '+fmtTime(start)+'–'+fmtTime(start+planTotal(p))+' &nbsp; <b>Location:</b> '+esc(p.location||'')+' &nbsp; <b>Total:</b> '+planTotal(p)+' min &nbsp; <b>Blocks:</b> '+p.blocks.length+'</p>'}
 function notesHTML(p){return (p.reminders?'<h3>Team reminders</h3><p>'+esc(p.reminders)+'</p>':'')+(p.notes?'<h3>Notes</h3><p>'+esc(p.notes)+'</p>':'')}
 function fieldsHTML(){return '<h3>Field diagrams</h3><div class="row"><div>'+fieldSVG(false)+'<p>Full field</p></div><div>'+fieldSVG(true)+'<p>Attacking half</p></div></div>'}
-function templatePicker(){return '<label>Sheet template</label><select onchange="S.template=this.value;toast(\'Template: \'+this.value)"><option'+(S.template==='Classic'?' selected':'')+'>Classic</option><option'+(S.template==='Compact'?' selected':'')+'>Compact</option><option'+(S.template==="Coach's copy"?' selected':'')+'>Coach\'s copy</option><option'+(S.template==='Sideline'?' selected':'')+'>Sideline</option></select>'}
+function templatePicker(){return '<label>Sheet template</label><select onchange="S.template=this.value;scheduleSave();toast(\'Template: \'+this.value)"><option'+(S.template==='Classic'?' selected':'')+'>Classic</option><option'+(S.template==='Compact'?' selected':'')+'>Compact</option><option'+(S.template==="Coach's copy"?' selected':'')+'>Coach\'s copy</option><option'+(S.template==='Sideline'?' selected':'')+'>Sideline</option></select>'}
 function downloadPDF(html,name){var box=document.getElementById('pdfStage');if(!box){box=document.createElement('div');box.id='pdfStage';box.style.cssText='position:fixed;left:-9999px;top:0;width:760px;background:#fff;color:#111;padding:20px';document.body.appendChild(box)}box.innerHTML=html;if(window.html2pdf){html2pdf().set({margin:10,filename:name||'practice-plan.pdf',image:{type:'jpeg',quality:.95},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'letter'}}).from(box).save().then(function(){toast('PDF downloaded')}).catch(function(){toast('PDF failed — open Preview to read the sheet')})}else{toast('PDF engine still loading — try again in a moment')}}
 function openModal(html){document.getElementById('modalBox').innerHTML=html+'<div class="row" style="margin-top:1rem"><button onclick="closeModal()">Close</button></div>';document.getElementById('modal').className='modal open'}
 function closeModal(){document.getElementById('modal').className='modal'}
@@ -183,7 +183,7 @@ function planEditorHTML(p){
  var add=S.cats.map(function(c){var ds=S.drills.filter(function(d){return d.cat===c});if(!ds.length)return '';return '<details><summary>'+esc(c)+' ('+ds.length+')</summary>'+ds.map(function(d){return '<div class="row"><span class="grow">'+esc(d.name)+' — '+d.mins+' min</span><button class="small primary" onclick="addBlockToPlan(\''+esc(d.name).replace(/'/g,"\\'")+'\')">Add</button></div>'}).join('')+'</details>'}).join('');
  return '<button class="only-mobile" onclick="editPlanIdx=-1;render()">← Back to plans</button><div class="card"><label>Title</label><input value="'+esc(p.title)+'" onchange="S.plans[editPlanIdx].title=this.value"><div class="grid"><div><label>Date</label><input type="date" value="'+esc(p.date)+'" onchange="S.plans[editPlanIdx].date=this.value"></div><div><label>Start time</label><input type="time" value="'+esc(p.start)+'" onchange="S.plans[editPlanIdx].start=this.value"></div><div><label>End time</label><input type="time" value="'+esc(p.end)+'" onchange="S.plans[editPlanIdx].end=this.value"></div><div><label>Location</label><input value="'+esc(p.location)+'" onchange="S.plans[editPlanIdx].location=this.value"></div><div><label>Plan color</label><input type="color" value="'+esc(p.color||'#a6192e')+'" onchange="S.plans[editPlanIdx].color=this.value"></div></div><label>Team logo</label><input type="file" accept="image/*" onchange="loadLogo(this)"><label>Team reminders</label><textarea rows="2" onchange="S.plans[editPlanIdx].reminders=this.value">'+esc(p.reminders)+'</textarea><label>Notes</label><textarea rows="2" onchange="S.plans[editPlanIdx].notes=this.value">'+esc(p.notes)+'</textarea>'+templatePicker()+'<div class="row" style="margin-top:.6rem"><button class="primary" onclick="previewPlan(editPlanIdx)">Preview</button><button onclick="downloadPDF(sheetHTML(S.plans[editPlanIdx]))">Download PDF</button><button onclick="dupPlan(editPlanIdx)">Duplicate</button><button class="danger" onclick="askConfirm(\'Delete this plan?\',function(){S.plans.splice(editPlanIdx,1);editPlanIdx=-1;render()})">Delete</button></div></div><h3>Blocks — '+planTotal(p)+' min total</h3>'+blocks+'<h3>Add a block from the drill bank</h3>'+add;
 }
-function loadLogo(inp){if(inp.files&&inp.files[0]){var r=new FileReader();r.onload=function(){S.logo=r.result;toast('Logo set for this session')};r.readAsDataURL(inp.files[0])}}
+function loadLogo(inp){if(inp.files&&inp.files[0]){var r=new FileReader();r.onload=function(){S.logo=r.result;toast('Logo saved');scheduleSave()};r.readAsDataURL(inp.files[0])}}
 function adjBlock(bi,d){var b=S.plans[editPlanIdx].blocks[bi];b.mins=Math.max(1,b.mins+d);render()}
 function swapBlock(bi,name){var d=drillByName(name);var b=S.plans[editPlanIdx].blocks[bi];b.name=d.name;b.cat=d.cat;render()}
 function addBlockToPlan(name){var d=drillByName(name);S.plans[editPlanIdx].blocks.push({name:d.name,cat:d.cat,mins:d.mins});render();toast('Added '+d.name)}
@@ -343,7 +343,87 @@ function renderCalendar(){
 }
 function saveEvent(){var obj={type:document.getElementById('eType').value,title:document.getElementById('eTitle').value.trim()||'Event',date:document.getElementById('eDate').value,start:document.getElementById('eStart').value,end:document.getElementById('eEnd').value,location:document.getElementById('eLoc').value,opp:document.getElementById('eOpp').value,notes:document.getElementById('eNotes').value};if(editEvIdx>=0){S.events[editEvIdx]=obj;editEvIdx=-1;toast('Event updated')}else{S.events.push(obj);toast('Event added')}render()}
 function openPlanViewer(i){var p=S.plans[i];if(!p)return;openModal('<div class="card"><b>View only</b> — the plan sheet loads instantly; the PDF builds in the background.<br>'+templatePicker()+'</div><div id="viewerSheet">'+sheetHTML(p)+'</div><div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="closeModal();S.page=\'plans\';S.sub=\'your\';editPlanIdx='+i+';render()">Edit plan</button><button onclick="document.getElementById(\'viewerSheet\').innerHTML=sheetHTML(S.plans['+i+'])">Refresh sheet for template</button></div>');downloadPDF(sheetHTML(p))}
-render();
+/* ---------- SERVER SYNC (one shared state for all approved accounts) ---------- */
+var SYNC_KEYS=['cats','drills','roster','former','depth','recruits','rankings','plans','events','sessions','template','logo','teamColor','rankClass'];
+var syncReady=false, syncTimer=null, syncRetry=0;
+function syncSnapshot(){
+ var out={};
+ SYNC_KEYS.forEach(function(k){ if(k in S) out[k]=S[k]; });
+ /* Drill video examples are session-only blob: URLs; never persist them. */
+ out.drills=(S.drills||[]).map(function(d){ var c={}; for(var k in d) c[k]=d[k]; if(c.video&&String(c.video).indexOf('blob:')===0) c.video=''; return c; });
+ return out;
+}
+function syncShow(msg,bad){ var el=document.getElementById('saveState'); if(el){ el.textContent=msg; el.style.color=bad?'var(--bad)':'var(--mut)'; } }
+function syncSaveNow(){
+ if(!syncReady) return;
+ var body;
+ try{ body=JSON.stringify(syncSnapshot()); }catch(e){ return; }
+ if(body.length>5*1024*1024){ syncShow('Too large to save online',true); return; }
+ syncShow('Saving…');
+ fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:body,credentials:'same-origin'})
+  .then(function(r){ if(!r.ok) throw new Error('save failed '+r.status); return r.json(); })
+  .then(function(){ syncRetry=0; syncShow('Saved ✓'); try{ localStorage.setItem('sjc-shared-state-v1',body); }catch(e){} })
+  .catch(function(){
+   try{ localStorage.setItem('sjc-shared-state-v1',body); }catch(e){}
+   if(syncRetry<3){ syncRetry++; syncShow('Saving…'); setTimeout(syncSaveNow,3000*syncRetry); }
+   else syncShow('Save failed — kept on this device',true);
+  });
+}
+function scheduleSave(){
+ if(!syncReady) return;
+ if(syncTimer) clearTimeout(syncTimer);
+ syncTimer=setTimeout(syncSaveNow,1500);
+}
+function syncApply(d){
+ if(!d||typeof d!=='object'||Array.isArray(d)) return false;
+ var ok=false;
+ SYNC_KEYS.forEach(function(k){
+  if(!(k in d)) return;
+  var v=d[k];
+  if(k==='depth'||k==='rankings'){ if(v&&typeof v==='object'&&!Array.isArray(v)){ S[k]=v; ok=true; } }
+  else if(k==='template'||k==='logo'||k==='teamColor'){ if(typeof v==='string'){ S[k]=v; ok=true; } }
+  else if(k==='rankClass'){ if(typeof v==='number'){ S.rankClass=v; ok=true; } }
+  else if(Array.isArray(v)){ S[k]=v; ok=true; }
+ });
+ /* Keep new ids unique after loading saved state. */
+ var maxId=0;
+ ['drills','roster','former','recruits'].forEach(function(k){
+  (S[k]||[]).forEach(function(x){ if(x&&typeof x.id==='number'&&x.id>maxId) maxId=x.id; });
+ });
+ if(maxId>=uid) uid=maxId+1;
+ return ok;
+}
+function syncLoadLocal(){
+ try{ var raw=localStorage.getItem('sjc-shared-state-v1'); if(raw) return JSON.parse(raw); }catch(e){}
+ return null;
+}
+var _render=render;
+render=function(){ _render(); scheduleSave(); };
+window.addEventListener('beforeunload',function(){
+ if(!syncReady) return;
+ if(syncTimer){ clearTimeout(syncTimer); syncTimer=null; }
+ try{
+  var body=JSON.stringify(syncSnapshot());
+  if(body.length<=5*1024*1024){
+   fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:body,credentials:'same-origin',keepalive:true});
+  }
+  try{ localStorage.setItem('sjc-shared-state-v1',body); }catch(e){}
+ }catch(e){}
+});
+(function boot(){
+ fetch('/api/data',{credentials:'same-origin'})
+  .then(function(r){ if(!r.ok) throw new Error('load failed '+r.status); return r.json(); })
+  .then(function(j){
+   if(j&&j.data&&syncApply(j.data)) syncShow('Loaded ✓');
+   else syncShow('Ready');
+  })
+  .catch(function(){
+   var local=syncLoadLocal();
+   if(local&&syncApply(local)) syncShow('Offline copy loaded',true);
+   else syncShow('Ready');
+  })
+  .then(function(){ syncReady=true; _render(); });
+})();
 </script>
 </body>
 </html>

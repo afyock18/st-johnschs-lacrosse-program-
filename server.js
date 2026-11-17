@@ -43,6 +43,15 @@ async function initDb() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )`
     );
+    // One shared program state for every approved account (last-write-wins).
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS shared_state (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        data JSONB NOT NULL,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+        CONSTRAINT single_row CHECK (id = 1)
+      )`
+    );
     dbReady = true;
     console.log('Database ready');
   } catch (err) {
@@ -52,7 +61,7 @@ async function initDb() {
 }
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '6mb' }));
 app.use(cookieParser());
 
 function publicUser(row) {
@@ -190,6 +199,48 @@ app.post('/api/logout', (req, res) => {
 
 app.get('/api/me', requireAuth, (req, res) => {
   res.json({ ok: true, user: publicUser(req.user) });
+});
+
+// Shared program state: one state for every approved account (last-write-wins).
+app.get('/api/data', requireApproved, async (req, res) => {
+  if (!requireDb(req, res)) return;
+  try {
+    const result = await pool.query('SELECT data, updated_at FROM shared_state WHERE id = 1');
+    if (!result.rows.length) return res.json({ ok: true, data: null, updated_at: null });
+    return res.json({ ok: true, data: result.rows[0].data, updated_at: result.rows[0].updated_at });
+  } catch (err) {
+    console.error('Load shared state failed:', err.message);
+    return res.status(500).json({ error: 'Could not load the saved program.' });
+  }
+});
+
+app.put('/api/data', requireApproved, async (req, res) => {
+  if (!requireDb(req, res)) return;
+  const body = req.body;
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return res.status(400).json({ error: 'Saved data must be an object.' });
+  }
+  let size = 0;
+  try {
+    size = JSON.stringify(body).length;
+  } catch (err) {
+    return res.status(400).json({ error: 'Saved data could not be read.' });
+  }
+  if (size > 5 * 1024 * 1024) {
+    return res.status(413).json({ error: 'Saved data is too large (over 5 MB).' });
+  }
+  try {
+    const result = await pool.query(
+      `INSERT INTO shared_state (id, data, updated_at) VALUES (1, $1::jsonb, now())
+       ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_at = now()
+       RETURNING updated_at`,
+      [JSON.stringify(body)]
+    );
+    return res.json({ ok: true, updated_at: result.rows[0].updated_at });
+  } catch (err) {
+    console.error('Save shared state failed:', err.message);
+    return res.status(500).json({ error: 'Could not save the program.' });
+  }
 });
 
 app.post('/api/change-password', requireAuth, async (req, res) => {
