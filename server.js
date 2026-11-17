@@ -18,6 +18,13 @@ const pool = DATABASE_URL
   ? new Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } })
   : null;
 let dbReady = false;
+let dbError = '';
+let dbHost = '';
+try {
+  if (DATABASE_URL) dbHost = new URL(DATABASE_URL).hostname;
+} catch (err) {
+  dbHost = 'invalid-url';
+}
 
 async function initDb() {
   if (!pool) {
@@ -39,6 +46,7 @@ async function initDb() {
     dbReady = true;
     console.log('Database ready');
   } catch (err) {
+    dbError = err.message || String(err);
     console.error('Database init failed:', err.message);
   }
 }
@@ -113,7 +121,7 @@ function requireAdmin(req, res, next) {
 app.use(authUser);
 
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true, db: dbReady });
+  res.json({ ok: true, db: dbReady, dbHost: dbHost, dbError: dbError || undefined });
 });
 
 app.post('/api/signup', async (req, res) => {
