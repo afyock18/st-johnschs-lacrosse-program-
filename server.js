@@ -3,9 +3,11 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
+const nodemailer = require('nodemailer');
 const { Pool } = require('pg');
 
 const PORT = process.env.PORT || 3000;
@@ -13,6 +15,8 @@ const ADMIN_EMAIL = String(process.env.ADMIN_EMAIL || 'alericfyock1@gmail.com').
 const JWT_SECRET = process.env.SESSION_SECRET || 'dev-secret-change-me';
 const NOTIFY_TOKEN = process.env.NOTIFY_TOKEN || '';
 const DATABASE_URL = process.env.DATABASE_URL || '';
+const SMTP_USER = process.env.SMTP_USER || 'alericfyock1@gmail.com';
+const SMTP_PASS = process.env.SMTP_PASS || '';
 
 const pool = DATABASE_URL
   ? new Pool({ connectionString: DATABASE_URL, ssl: { rejectUnauthorized: false } })
@@ -44,6 +48,18 @@ async function initDb() {
       )`
     );
     await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ');
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS password_changed_at TIMESTAMPTZ');
+    // Single-use password reset tokens (only the SHA-256 hash is stored).
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token_hash TEXT UNIQUE NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        used_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+      )`
+    );
     // One shared program state for every approved account (last-write-wins).
     await pool.query(
       `CREATE TABLE IF NOT EXISTS shared_state (
@@ -65,6 +81,86 @@ const app = express();
 app.use(express.json({ limit: '6mb' }));
 app.use(cookieParser());
 
+// Password reset mailer (Gmail SMTP). Configured from env only; SMTP_PASS is a
+// Gmail app password. Until it is set, reset emails are skipped (logged) and
+// the forgot-password endpoint still answers with its generic success.
+let mailTransporter = null;
+let mailTransporterTried = false;
+function getMailer() {
+  if (mailTransporterTried) return mailTransporter;
+  mailTransporterTried = true;
+  if (!SMTP_PASS) {
+    console.error('SMTP_PASS is not set; password reset emails are disabled');
+    return null;
+  }
+  try {
+    mailTransporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    });
+  } catch (err) {
+    console.error('Could not set up the mailer:', err.message);
+    mailTransporter = null;
+  }
+  return mailTransporter;
+}
+
+// Password recovery: emailed reset links, one use, 1 hour.
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+const FORGOT_RATE_LIMIT = 5;
+const FORGOT_RATE_WINDOW_MS = 60 * 60 * 1000;
+const forgotAttempts = new Map(); // email -> [request timestamps]
+
+function forgotRateLimited(email) {
+  const now = Date.now();
+  const recent = (forgotAttempts.get(email) || []).filter(function (t) { return now - t < FORGOT_RATE_WINDOW_MS; });
+  if (recent.length >= FORGOT_RATE_LIMIT) {
+    forgotAttempts.set(email, recent);
+    return true;
+  }
+  recent.push(now);
+  forgotAttempts.set(email, recent);
+  return false;
+}
+
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function resetLinkBase(req) {
+  const external = process.env.RENDER_EXTERNAL_URL;
+  if (external) return String(external).replace(/\/$/, '');
+  return req.protocol + '://' + req.get('host');
+}
+
+async function sendResetEmail(email, resetLink) {
+  const transporter = getMailer();
+  if (!transporter) {
+    console.error('Password reset email not sent: mail is not configured');
+    return false;
+  }
+  try {
+    await transporter.sendMail({
+      from: SMTP_USER,
+      to: email,
+      subject: "Reset your St. John's Lacrosse password",
+      text: [
+        "You asked to reset the password for your St. John's Lacrosse account.",
+        '',
+        'Reset your password here (this link works once and expires in 1 hour):',
+        resetLink,
+        '',
+        'If you did not ask for this, you can ignore this email — your password will not change.',
+      ].join('\n'),
+    });
+    return true;
+  } catch (err) {
+    console.error('Password reset email failed:', err.message);
+    return false;
+  }
+}
 function publicUser(row) {
   return { id: row.id, name: row.name, email: row.email, status: row.status, role: row.role, created_at: row.created_at };
 }
@@ -107,9 +203,16 @@ async function authUser(req, res, next) {
   }
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const result = await pool.query('SELECT id, name, email, status, role, created_at, last_active_at FROM users WHERE id = $1', [payload.id]);
+    const result = await pool.query('SELECT id, name, email, status, role, created_at, last_active_at, password_changed_at FROM users WHERE id = $1', [payload.id]);
     req.user = result.rows.length ? result.rows[0] : null;
     if (req.user) {
+      var changedAt = req.user.password_changed_at ? new Date(req.user.password_changed_at).getTime() : 0;
+      if (changedAt && payload.iat < Math.floor(changedAt / 1000)) {
+        // Password was reset after this session started: end the session.
+        req.user = null;
+        res.clearCookie('token', { path: '/' });
+        return next();
+      }
       var lastActive = req.user.last_active_at ? new Date(req.user.last_active_at).getTime() : 0;
       if (lastActive && Date.now() - lastActive > IDLE_TIMEOUT_MS) {
         // Idle for over an hour: end the session even though the JWT is still valid.
@@ -231,6 +334,82 @@ app.post('/api/logout', (req, res) => {
   return res.json({ ok: true });
 });
 
+// Forgot password: always the same generic answer, whether or not the email
+// has an approved account, so account existence is never revealed.
+app.post('/api/forgot-password', async (req, res) => {
+  if (!requireDb(req, res)) return;
+  const email = String(req.body && req.body.email ? req.body.email : '').trim().toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.json({ ok: true });
+  }
+  if (forgotRateLimited(email)) return res.json({ ok: true });
+  try {
+    const result = await pool.query('SELECT id, email, status FROM users WHERE email = $1', [email]);
+    const user = result.rows[0];
+    if (!user || user.status !== 'approved') return res.json({ ok: true });
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = hashResetToken(rawToken);
+    // One active token per user: a new request replaces any earlier one.
+    await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [user.id]);
+    await pool.query(
+      'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)',
+      [user.id, tokenHash, new Date(Date.now() + RESET_TOKEN_TTL_MS)]
+    );
+    const link = resetLinkBase(req) + '/reset?token=' + rawToken;
+    await sendResetEmail(user.email, link);
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Forgot password failed:', err.message);
+    return res.json({ ok: true });
+  }
+});
+
+// Check whether a reset token is still usable (drives the reset page's state).
+app.get('/api/reset-token', async (req, res) => {
+  if (!requireDb(req, res)) return;
+  const token = String(req.query && req.query.token ? req.query.token : '');
+  const badLink = 'This reset link is invalid or has expired.';
+  if (!token) return res.status(400).json({ error: badLink });
+  try {
+    const result = await pool.query(
+      'SELECT id FROM password_reset_tokens WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()',
+      [hashResetToken(token)]
+    );
+    if (!result.rows.length) return res.status(400).json({ error: badLink });
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('Reset token check failed:', err.message);
+    return res.status(500).json({ error: 'Could not check the reset link. Please try again.' });
+  }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+  if (!requireDb(req, res)) return;
+  const token = String(req.body && req.body.token ? req.body.token : '');
+  const password = String(req.body && req.body.password ? req.body.password : '');
+  const badLink = 'This reset link is invalid or has expired.';
+  if (!token) return res.status(400).json({ error: badLink });
+  try {
+    const result = await pool.query(
+      'SELECT id, user_id FROM password_reset_tokens WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now()',
+      [hashResetToken(token)]
+    );
+    const row = result.rows[0];
+    if (!row) return res.status(400).json({ error: badLink });
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    }
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query('UPDATE users SET password_hash = $1, password_changed_at = now() WHERE id = $2', [hash, row.user_id]);
+    await pool.query('UPDATE password_reset_tokens SET used_at = now() WHERE id = $1', [row.id]);
+    await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1 AND id <> $2', [row.user_id, row.id]);
+    return res.json({ ok: true, message: 'Your password was updated.' });
+  } catch (err) {
+    console.error('Reset password failed:', err.message);
+    return res.status(500).json({ error: 'Could not reset the password. Please try again.' });
+  }
+});
+
 app.get('/api/me', requireAuth, (req, res) => {
   res.json({ ok: true, user: publicUser(req.user) });
 });
@@ -291,7 +470,7 @@ app.post('/api/change-password', requireAuth, async (req, res) => {
       return res.status(401).json({ error: 'Current password is incorrect.' });
     }
     const hash = await bcrypt.hash(next, 10);
-    await pool.query('UPDATE users SET password_hash = $1 WHERE id = $2', [hash, req.user.id]);
+    await pool.query('UPDATE users SET password_hash = $1, password_changed_at = now() WHERE id = $2', [hash, req.user.id]);
     return res.json({ ok: true, message: 'Password changed.' });
   } catch (err) {
     console.error('Change password failed:', err.message);
@@ -392,6 +571,7 @@ app.get('/api/notify/pending', async (req, res) => {
 
 const APP_FILE = path.join(__dirname, 'public', 'index.html');
 const LOGIN_FILE = path.join(__dirname, 'login.html');
+const RESET_FILE = path.join(__dirname, 'reset.html');
 const ADMIN_FILE = path.join(__dirname, 'admin.html');
 
 function serveApp(req, res) {
@@ -415,6 +595,10 @@ app.get('/app', serveApp);
 app.get('/login', (req, res) => {
   if (req.user && req.user.status === 'approved') return res.redirect('/');
   return res.sendFile(LOGIN_FILE);
+});
+
+app.get('/reset', (req, res) => {
+  return res.sendFile(RESET_FILE);
 });
 
 app.get('/admin', (req, res) => {

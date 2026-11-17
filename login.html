@@ -48,9 +48,12 @@
     </div>
     <label for="email">Email</label>
     <input id="email" type="email" autocomplete="email" placeholder="you@example.com">
-    <label for="password">Password</label>
-    <input id="password" type="password" autocomplete="current-password" placeholder="Your password">
+    <div id="passwordRow">
+      <label for="password">Password</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="Your password">
+    </div>
     <button id="submitBtn" type="button">Log in</button>
+    <p class="toggle" id="forgotText" style="margin-top:12px"><a id="forgotLink">Forgot password?</a></p>
     <div id="msg" class="msg"></div>
     <p class="toggle" id="toggleText">Don't have an account? <a id="toggleLink">Create one</a></p>
   </div>
@@ -62,12 +65,19 @@
   var title = document.getElementById('formTitle');
   var sub = document.getElementById('formSub');
   var nameRow = document.getElementById('nameRow');
+  var passwordRow = document.getElementById('passwordRow');
   var btn = document.getElementById('submitBtn');
   var toggleText = document.getElementById('toggleText');
+  var forgotText = document.getElementById('forgotText');
 
   function show(text, kind) {
     msg.textContent = text;
     msg.className = 'msg ' + (kind || 'err');
+  }
+  function bindToggle() {
+    document.getElementById('toggleLink').addEventListener('click', function () {
+      setMode(mode === 'login' ? 'signup' : 'login');
+    });
   }
   function setMode(m) {
     mode = m;
@@ -77,21 +87,32 @@
       title.textContent = 'Create an account';
       sub.textContent = 'New accounts wait for approval before they can log in.';
       nameRow.style.display = 'block';
+      passwordRow.style.display = 'block';
       btn.textContent = 'Create account';
       toggleText.innerHTML = 'Already have an account? <a id="toggleLink">Log in</a>';
+      forgotText.style.display = 'none';
+    } else if (m === 'forgot') {
+      title.textContent = 'Reset your password';
+      sub.textContent = 'Enter the email on your account and we will send you a reset link.';
+      nameRow.style.display = 'none';
+      passwordRow.style.display = 'none';
+      btn.textContent = 'Send reset link';
+      toggleText.innerHTML = 'Remembered it? <a id="toggleLink">Back to log in</a>';
+      forgotText.style.display = 'none';
     } else {
       title.textContent = 'Log in';
       sub.textContent = 'Log in to use the practice plans program.';
       nameRow.style.display = 'none';
+      passwordRow.style.display = 'block';
       btn.textContent = 'Log in';
       toggleText.innerHTML = 'Don\'t have an account? <a id="toggleLink">Create one</a>';
+      forgotText.style.display = 'block';
     }
-    document.getElementById('toggleLink').addEventListener('click', function () {
-      setMode(mode === 'login' ? 'signup' : 'login');
-    });
+    bindToggle();
   }
-  document.getElementById('toggleLink').addEventListener('click', function () {
-    setMode(mode === 'login' ? 'signup' : 'login');
+  bindToggle();
+  document.getElementById('forgotLink').addEventListener('click', function () {
+    setMode('forgot');
   });
 
   var params = new URLSearchParams(window.location.search);
@@ -110,11 +131,17 @@
     var name = document.getElementById('name').value.trim();
     btn.disabled = true;
     try {
+      if (mode === 'forgot') {
+        var res = await fetch('/api/forgot-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email }) });
+        await res.json();
+        show('If an account exists for that email, a reset link is on its way.', 'ok');
+        return;
+      }
       var url = mode === 'login' ? '/api/login' : '/api/signup';
       var body = mode === 'login' ? { email: email, password: password } : { name: name, email: email, password: password };
-      var res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      var data = await res.json();
-      if (!res.ok) {
+      var res2 = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      var data = await res2.json();
+      if (!res2.ok) {
         show(data.error || 'Something went wrong. Please try again.', 'err');
         return;
       }
@@ -134,6 +161,9 @@
     }
   });
   document.getElementById('password').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') btn.click();
+  });
+  document.getElementById('email').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') btn.click();
   });
 })();
