@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: st-johns-lacrosse-app
+    name: st-johnschs-lacrosse-program
     runtime: node
     plan: free
     region: oregon
