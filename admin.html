@@ -33,7 +33,7 @@
 <body>
 <header>
   <h1>St. John's Lacrosse — Approvals</h1>
-  <a href="/">Back to Practice Plans</a>
+  <span><a href="/">Back to Practice Plans</a> <button id="logoutBtn" class="deny" type="button" onclick="doLogout()">Log out</button></span>
 </header>
 <div class="gold"></div>
 <main>
@@ -61,6 +61,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   async function api(url, opts) {
     var res = await fetch(url, opts);
+    if (res.status === 401) { window.location.href = '/login?notice=idle'; throw new Error('Your session ended. Please log in again.'); }
     var data = await res.json().catch(function () { return {}; });
     if (!res.ok) throw new Error(data.error || 'Request failed.');
     return data;
@@ -110,6 +111,65 @@
       b.disabled = false;
     }
   });
+/* ---------- Idle auto-logout: 1 hour without activity ---------- */
+var IDLE_LIMIT_MS = 60*60*1000;
+var IDLE_KEY = 'sjc-last-activity-v1';
+var IDLE_MARK_MIN_MS = 30*1000;
+var idleTimer = null, idleLoggingOut = false, idleLastMark = 0;
+function idleGetLast(){ try{ var v=parseInt(localStorage.getItem(IDLE_KEY)||'0',10); return v||0; }catch(e){ return 0; } }
+function idleFlushSave(){
+  try{
+    if(typeof syncTimer!=='undefined'&&syncTimer){ clearTimeout(syncTimer); syncTimer=null; }
+    if(typeof syncReady!=='undefined'&&syncReady&&typeof syncSnapshot==='function'){
+      var body=JSON.stringify(syncSnapshot());
+      if(body.length<=5*1024*1024){
+        fetch('/api/data',{method:'PUT',headers:{'Content-Type':'application/json'},body:body,credentials:'same-origin',keepalive:true});
+      }
+      try{ localStorage.setItem('sjc-shared-state-v1',body); }catch(e){}
+    }
+  }catch(e){}
+}
+function idleLogout(){
+  if(idleLoggingOut) return; idleLoggingOut=true;
+  if(idleTimer) clearTimeout(idleTimer);
+  idleFlushSave();
+  try{ localStorage.removeItem(IDLE_KEY); }catch(e){}
+  var done=function(){ window.location.href='/login?notice=idle'; };
+  try{ fetch('/api/logout',{method:'POST',credentials:'same-origin',keepalive:true}).then(done,done); setTimeout(done,1500); }
+  catch(e){ done(); }
+}
+function doLogout(){
+  if(idleLoggingOut) return; idleLoggingOut=true;
+  if(idleTimer) clearTimeout(idleTimer);
+  idleFlushSave();
+  try{ localStorage.removeItem(IDLE_KEY); }catch(e){}
+  var done=function(){ window.location.href='/login?notice=logged-out'; };
+  try{ fetch('/api/logout',{method:'POST',credentials:'same-origin',keepalive:true}).then(done,done); setTimeout(done,1500); }
+  catch(e){ done(); }
+}
+function idleArm(){
+  if(idleLoggingOut) return;
+  if(idleTimer) clearTimeout(idleTimer);
+  var remaining = IDLE_LIMIT_MS - (Date.now() - idleGetLast());
+  if(remaining<=0){ idleLogout(); return; }
+  idleTimer=setTimeout(idleLogout, remaining);
+}
+function idleMark(){
+  if(idleLoggingOut) return;
+  var now=Date.now();
+  if(now-idleLastMark<IDLE_MARK_MIN_MS) return;
+  idleLastMark=now;
+  try{ localStorage.setItem(IDLE_KEY,String(now)); }catch(e){}
+  idleArm();
+}
+['click','keydown','mousemove','scroll','touchstart'].forEach(function(ev){
+  window.addEventListener(ev, idleMark, {passive:true});
+});
+window.addEventListener('storage', function(e){ if(e.key===IDLE_KEY) idleArm(); });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden) idleArm(); });
+window.addEventListener('focus', idleArm);
+idleMark();
+  window.doLogout = doLogout;
   load().catch(function (err) {
     document.getElementById('pendingBody').innerHTML = '<tr><td colspan="4" class="empty">' + esc(err.message) + '</td></tr>';
   });

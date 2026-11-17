@@ -43,6 +43,7 @@ async function initDb() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       )`
     );
+    await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ');
     // One shared program state for every approved account (last-write-wins).
     await pool.query(
       `CREATE TABLE IF NOT EXISTS shared_state (
@@ -72,6 +73,22 @@ function signToken(user) {
   return jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 }
 
+// Idle auto-logout: a session ends after 1 hour without activity.
+// The 7-day JWT stays the absolute cap; this is the idle cap only.
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
+const ACTIVITY_WRITE_MIN_MS = 60 * 1000;
+const SKIP_ACTIVITY_PATHS = ['/api/health', '/login', '/api/login', '/api/signup', '/api/logout'];
+const lastActivityWrite = new Map();
+function touchActivity(userId, force, reqPath) {
+  if (!pool || !userId) return;
+  if (reqPath && SKIP_ACTIVITY_PATHS.indexOf(reqPath) !== -1) return;
+  var now = Date.now();
+  var prev = lastActivityWrite.get(userId) || 0;
+  if (!force && now - prev < ACTIVITY_WRITE_MIN_MS) return;
+  lastActivityWrite.set(userId, now);
+  pool.query('UPDATE users SET last_active_at = now() WHERE id = $1', [userId]).catch(function () {});
+}
+
 function setAuthCookie(res, token) {
   res.cookie('token', token, {
     httpOnly: true,
@@ -90,8 +107,20 @@ async function authUser(req, res, next) {
   }
   try {
     const payload = jwt.verify(token, JWT_SECRET);
-    const result = await pool.query('SELECT id, name, email, status, role, created_at FROM users WHERE id = $1', [payload.id]);
+    const result = await pool.query('SELECT id, name, email, status, role, created_at, last_active_at FROM users WHERE id = $1', [payload.id]);
     req.user = result.rows.length ? result.rows[0] : null;
+    if (req.user) {
+      var lastActive = req.user.last_active_at ? new Date(req.user.last_active_at).getTime() : 0;
+      if (lastActive && Date.now() - lastActive > IDLE_TIMEOUT_MS) {
+        // Idle for over an hour: end the session even though the JWT is still valid.
+        req.user = null;
+        req.sessionExpired = true;
+        res.clearCookie('token', { path: '/' });
+      } else {
+        // No last_active_at yet (users from before this change): seed it now and stay logged in.
+        touchActivity(req.user.id, !lastActive, req.path);
+      }
+    }
   } catch (err) {
     req.user = null;
   }
@@ -107,11 +136,13 @@ function requireDb(req, res) {
 }
 
 function requireAuth(req, res, next) {
+  if (req.sessionExpired) return res.status(401).json({ error: 'Your session ended after an hour without activity. Please log in again.' });
   if (!req.user) return res.status(401).json({ error: 'Please log in.' });
   return next();
 }
 
 function requireApproved(req, res, next) {
+  if (req.sessionExpired) return res.status(401).json({ error: 'Your session ended after an hour without activity. Please log in again.' });
   if (!req.user) return res.status(401).json({ error: 'Please log in.' });
   if (req.user.status !== 'approved') {
     return res.status(403).json({ error: 'Your account is waiting for approval.' });
@@ -120,6 +151,7 @@ function requireApproved(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
+  if (req.sessionExpired) return res.status(401).json({ error: 'Your session ended after an hour without activity. Please log in again.' });
   if (!req.user) return res.status(401).json({ error: 'Please log in.' });
   if (req.user.role !== 'admin' || req.user.status !== 'approved') {
     return res.status(403).json({ error: 'Admin access only.' });
@@ -156,6 +188,7 @@ app.post('/api/signup', async (req, res) => {
     const user = publicUser(result.rows[0]);
     if (isAdmin) {
       setAuthCookie(res, signToken(user));
+      touchActivity(user.id, true);
       return res.status(201).json({ ok: true, user, message: 'Admin account created and approved.' });
     }
     return res.status(201).json({ ok: true, user, message: 'Account created. It is waiting for approval before you can log in.' });
@@ -185,6 +218,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(403).json({ error: 'Access denied.' });
     }
     setAuthCookie(res, signToken(user));
+    touchActivity(user.id, true);
     return res.json({ ok: true, user: publicUser(user) });
   } catch (err) {
     console.error('Login failed:', err.message);
@@ -361,6 +395,7 @@ const LOGIN_FILE = path.join(__dirname, 'login.html');
 const ADMIN_FILE = path.join(__dirname, 'admin.html');
 
 function serveApp(req, res) {
+  if (req.sessionExpired) return res.redirect('/login?notice=idle');
   if (!req.user) return res.redirect('/login');
   if (req.user.status !== 'approved') {
     return res.redirect('/login?notice=waiting');
@@ -383,6 +418,7 @@ app.get('/login', (req, res) => {
 });
 
 app.get('/admin', (req, res) => {
+  if (req.sessionExpired) return res.redirect('/login?notice=idle');
   if (!req.user) return res.redirect('/login');
   if (req.user.role !== 'admin' || req.user.status !== 'approved') return res.redirect('/');
   return res.sendFile(ADMIN_FILE);

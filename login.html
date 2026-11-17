@@ -95,8 +95,13 @@
   });
 
   var params = new URLSearchParams(window.location.search);
+  try { localStorage.removeItem('sjc-last-activity-v1'); } catch (e) {}
   if (params.get('notice') === 'waiting') {
     show('Your account is waiting for approval. You will be able to log in once it is approved.', 'info');
+  } else if (params.get('notice') === 'logged-out') {
+    show('You logged out.', 'ok');
+  } else if (params.get('notice') === 'idle') {
+    show('You were logged out after an hour without activity. Please log in again.', 'info');
   }
 
   btn.addEventListener('click', async function () {
