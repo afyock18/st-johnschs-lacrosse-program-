@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Approvals — St. John's Lacrosse Practice Plans</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #faf7f2; color: #1a1a1a; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { background: #faf7f2; border-bottom: 1px solid #e5ddd0; padding: 18px 24px; display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+  header h1 { margin: 0; font-family: "Arial Narrow", Arial, sans-serif; font-size: 26px; letter-spacing: .04em; color: #a6192e; text-transform: uppercase; }
+  header a { color: #a6192e; font-weight: 700; }
+  .gold { height: 4px; background: #c8a24a; }
+  main { max-width: 860px; margin: 32px auto; padding: 0 20px 60px; }
+  h2 { font-family: "Arial Narrow", Arial, sans-serif; font-size: 24px; text-transform: uppercase; color: #a6192e; margin: 28px 0 10px; }
+  .card { background: #fff; border: 1px solid #e5ddd0; border-radius: 10px; padding: 20px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #6b6259; padding: 8px 6px; border-bottom: 2px solid #e5ddd0; }
+  td { padding: 10px 6px; border-bottom: 1px solid #efe9df; vertical-align: middle; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .pill.pending { background: #fdf6e3; color: #6b5312; }
+  .pill.approved { background: #eef7ee; color: #1d5c2e; }
+  .pill.denied { background: #fdecea; color: #8f1427; }
+  .pill.admin { background: #a6192e; color: #fff; }
+  button { border: 0; border-radius: 999px; padding: 7px 14px; font-weight: 700; cursor: pointer; font-size: 13px; margin-right: 6px; }
+  .approve { background: #a6192e; color: #fff; }
+  .deny { background: #fff; color: #a6192e; border: 1px solid #a6192e; }
+  .del { background: #fff; color: #8f1427; border: 1px solid #f3c1bd; }
+  .empty { color: #6b6259; }
+  #msg { margin-top: 12px; font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>St. John's Lacrosse — Approvals</h1>
+  <a href="/">Back to Practice Plans</a>
+</header>
+<div class="gold"></div>
+<main>
+  <p id="who"></p>
+  <h2>Waiting for approval</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Requested</th><th></th></tr></thead>
+      <tbody id="pendingBody"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <h2>All accounts</h2>
+  <div class="card">
+    <table>
+      <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Role</th><th></th></tr></thead>
+      <tbody id="usersBody"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+    </table>
+  </div>
+  <p id="msg"></p>
+</main>
+<script>
+(function () {
+  var msg = document.getElementById('msg');
+  function show(t) { msg.textContent = t; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  async function api(url, opts) {
+    var res = await fetch(url, opts);
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    return data;
+  }
+  async function load() {
+    var me = await api('/api/me');
+    document.getElementById('who').textContent = 'Signed in as ' + me.user.name + ' (' + me.user.email + ') — admin';
+    var pending = await api('/api/admin/pending');
+    var pb = document.getElementById('pendingBody');
+    if (!pending.pending.length) {
+      pb.innerHTML = '<tr><td colspan="4" class="empty">No accounts are waiting for approval.</td></tr>';
+    } else {
+      pb.innerHTML = pending.pending.map(function (u) {
+        return '<tr><td>' + esc(u.name) + '</td><td>' + esc(u.email) + '</td><td>' + esc(new Date(u.created_at).toLocaleString()) + '</td>' +
+          '<td><button class="approve" data-act="approve" data-id="' + u.id + '">Approve</button>' +
+          '<button class="deny" data-act="deny" data-id="' + u.id + '">Deny</button></td></tr>';
+      }).join('');
+    }
+    var users = await api('/api/admin/users');
+    var ub = document.getElementById('usersBody');
+    ub.innerHTML = users.users.map(function (u) {
+      var del = u.role === 'admin' ? '' : '<button class="del" data-act="delete" data-id="' + u.id + '">Delete</button>';
+      return '<tr><td>' + esc(u.name) + '</td><td>' + esc(u.email) + '</td>' +
+        '<td><span class="pill ' + esc(u.status) + '">' + esc(u.status) + '</span></td>' +
+        '<td>' + (u.role === 'admin' ? '<span class="pill admin">admin</span>' : esc(u.role)) + '</td>' +
+        '<td>' + del + '</td></tr>';
+    }).join('');
+  }
+  document.addEventListener('click', async function (e) {
+    var b = e.target.closest('button[data-act]');
+    if (!b) return;
+    var act = b.getAttribute('data-act');
+    var id = Number(b.getAttribute('data-id'));
+    b.disabled = true;
+    try {
+      if (act === 'delete') {
+        if (!confirm('Delete this account?')) { b.disabled = false; return; }
+        await api('/api/admin/users/' + id, { method: 'DELETE' });
+        show('Account deleted.');
+      } else {
+        await api('/api/admin/' + act, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
+        show(act === 'approve' ? 'Account approved.' : 'Account denied.');
+      }
+      await load();
+    } catch (err) {
+      show(err.message);
+      b.disabled = false;
+    }
+  });
+  load().catch(function (err) {
+    document.getElementById('pendingBody').innerHTML = '<tr><td colspan="4" class="empty">' + esc(err.message) + '</td></tr>';
+  });
+})();
+</script>
+</body>
+</html>
