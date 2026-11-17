@@ -76,8 +76,73 @@ summary{cursor:pointer;font-weight:700;min-height:2.25rem;display:flex;align-ite
 .kpi{font-size:1.5rem;font-weight:700}
 .mast{background:var(--red);color:#fff;padding:1rem;border-radius:6px 6px 0 0;font-family:var(--display);letter-spacing:.025em}
 .goldrule{height:5px;background:var(--gold)}
-.sideline{font-size:1.25rem}
-.writeline{border-bottom:1px solid #999;height:1.6rem}
+/* Practice-plan sheets (St. John's templates): scoped to .professional-sheet so nothing else is restyled. Brand colors come from --sheet-primary/--sheet-secondary set inline on the sheet root; markup also carries the literal hex inline so html2pdf renders it. */
+.professional-sheet{color-scheme:light;--sheet-primary:#a6192e;--sheet-secondary:#c8a24a}
+.professional-sheet h1,.professional-sheet h2,.professional-sheet h3{margin:0;font-family:inherit;text-transform:none;letter-spacing:normal}
+.professional-sheet p{margin:0}
+.professional-sheet dl,.professional-sheet dt,.professional-sheet dd{margin:0}
+.professional-sheet ol,.professional-sheet ul{margin:0;padding:0;list-style:none}
+.professional-sheet figure{margin:0}
+.professional-sheet table{width:100%;border-collapse:collapse;text-align:left}
+.professional-sheet th,.professional-sheet td{border:none;background:none;padding:0;text-align:left;vertical-align:top}
+.professional-sheet .sp-bg{background-color:var(--sheet-primary)}
+.professional-sheet .sp-text{color:var(--sheet-primary)}
+.professional-sheet .sp-border{border-color:var(--sheet-primary)}
+.professional-sheet .ss-bg{background-color:var(--sheet-secondary)}
+.professional-sheet .sh-display{font-family:"Arial Narrow","Helvetica Neue","Roboto Condensed",sans-serif}
+.professional-sheet .sh-mono{font-family:ui-monospace,"SF Mono",Menlo,monospace}
+.professional-sheet .sh-mast{padding:20px}
+@media(min-width:640px){.professional-sheet .sh-mast{padding:24px 36px}}
+.professional-sheet .sh-logo-classic{height:64px;width:64px}
+@media(min-width:640px){.professional-sheet .sh-logo-classic{height:72px;width:72px}}
+.professional-sheet .sh-lacrosse{font-size:34px}
+@media(min-width:640px){.professional-sheet .sh-lacrosse{font-size:40px}}
+.professional-sheet .sh-body{padding:24px 20px}
+@media(min-width:640px){.professional-sheet .sh-body{padding:28px 36px}}
+.professional-sheet .sh-title-classic{font-size:26px}
+@media(min-width:640px){.professional-sheet .sh-title-classic{font-size:32px}}
+.professional-sheet .sh-classic-time{font-size:12px}
+@media(min-width:640px){.professional-sheet .sh-classic-time{font-size:13px}}
+.professional-sheet .sh-fact-val{font-size:14px}
+@media(min-width:640px){.professional-sheet .sh-fact-val{font-size:15px}}
+.professional-sheet .sh-facts{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px 0;border-top:2px solid #1c1a17;border-bottom:2px solid #1c1a17}
+@media(min-width:640px){.professional-sheet .sh-facts{grid-template-columns:repeat(5,1fr)}}
+.professional-sheet .sh-classic-row{display:grid;grid-template-columns:84px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid #e3ddd0}
+@media(min-width:640px){.professional-sheet .sh-classic-row{grid-template-columns:118px 54px 1fr;gap:16px}}
+.professional-sheet .sh-min-m{display:inline-block;background:#f3eee5;padding:2px 6px;font-size:11px;font-weight:700;margin-top:4px}
+@media(min-width:640px){.professional-sheet .sh-min-m{display:none}}
+.professional-sheet .sh-min-col{display:none}
+@media(min-width:640px){.professional-sheet .sh-min-col{display:block}}
+.professional-sheet .sh-min-d{display:inline-block;background:#f3eee5;padding:4px 8px;font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:11px;font-weight:700}
+.professional-sheet .sh-remfields{display:flex;flex-direction:column;gap:16px}
+@media(min-width:640px){.professional-sheet .sh-remfields{flex-direction:row}}
+.professional-sheet .sh-fields{flex-shrink:0;display:flex;gap:12px;color:#1c1a17}
+@media(min-width:640px){.professional-sheet .sh-fields{width:248px;flex-direction:column}}
+.professional-sheet .sh-half-fig{width:46%;flex-shrink:0}
+@media(min-width:640px){.professional-sheet .sh-half-fig{width:62%;margin:0 auto}}
+.professional-sheet .sh-compact-head{padding:20px 20px 12px}
+@media(min-width:640px){.professional-sheet .sh-compact-head{padding:20px 28px 12px}}
+.professional-sheet .sh-compact-body{padding:16px 20px}
+@media(min-width:640px){.professional-sheet .sh-compact-body{padding:16px 28px}}
+.professional-sheet .sh-detail-head{padding:24px 20px 0}
+@media(min-width:640px){.professional-sheet .sh-detail-head{padding:24px 36px 0}}
+.professional-sheet .sh-detail-body{padding:20px}
+@media(min-width:640px){.professional-sheet .sh-detail-body{padding:20px 36px}}
+.professional-sheet .sh-title-detail{font-size:30px}
+@media(min-width:640px){.professional-sheet .sh-title-detail{font-size:34px}}
+.professional-sheet .sh-side-head{padding:20px}
+@media(min-width:640px){.professional-sheet .sh-side-head{padding:20px 32px}}
+.professional-sheet .sh-side-body{padding:8px 20px}
+@media(min-width:640px){.professional-sheet .sh-side-body{padding:8px 32px}}
+.professional-sheet .sh-title-side{font-size:34px}
+@media(min-width:640px){.professional-sheet .sh-title-side{font-size:42px}}
+.professional-sheet .sh-side-time{font-size:19px}
+@media(min-width:640px){.professional-sheet .sh-side-time{font-size:21px}}
+.professional-sheet .sh-side-blocktitle{font-size:20px}
+@media(min-width:640px){.professional-sheet .sh-side-blocktitle{font-size:22px}}
+.professional-sheet .sh-side-timecol{width:118px}
+@media(min-width:640px){.professional-sheet .sh-side-timecol{width:150px}}
+.professional-sheet .sh-side-list li:last-child{border-bottom:none}
 @media(max-width:640px){.cal .day{min-height:4rem;font-size:.68rem}h1{font-size:1.35rem}.rtable{font-size:.82rem}.rtable th:nth-child(6),.rtable td:nth-child(6){display:none}}
 @media print{body>*{display:none}}
 </style>
@@ -115,7 +180,7 @@ function cfYes(){var f=pendingConfirm;pendingConfirm=null;document.getElementByI
 function cfNo(){pendingConfirm=null;document.getElementById('cfBar').style.display='none'}
 function fullName(p){return p.first+' '+p.last}
 function drillByName(n){for(var i=0;i<S.drills.length;i++)if(S.drills[i].name===n)return S.drills[i];return null}
-function fmtTime(mins){var h=Math.floor(mins/60),m=mins%60,ap=h>=12?'PM':'AM';var hh=h%12;if(hh===0)hh=12;return hh+':'+(m<10?'0':'')+m+' '+ap}
+function fmtTime(mins){mins=((mins%1440)+1440)%1440;var h=Math.floor(mins/60),m=mins%60,ap=h>=12?'PM':'AM';var hh=h%12;if(hh===0)hh=12;return hh+':'+(m<10?'0':'')+m+' '+ap}
 function parseTime(t){if(!t)return 15*60+30;var p=t.split(':');return (+p[0])*60+(+p[1])}
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 </script>
@@ -126,31 +191,131 @@ function renderTabs(){document.getElementById('mainTabs').innerHTML=PAGES.map(fu
 function go(p){S.page=p;render()}
 function render(){renderTabs();if(S.page==='plans')renderPlans();else if(S.page==='drills')renderDrills();else if(S.page==='roster')renderRoster();else if(S.page==='depth')renderDepth();else if(S.page==='recruits')renderRecruits();else if(S.page==='stats')renderStats();else if(S.page==='calendar')renderCalendar()}
 /* ---------- FIELD DIAGRAMS ---------- */
-function fieldSVG(half){return '<svg viewBox="0 0 200 '+(half?70:110)+'" style="width:100%;max-width:'+(half?'340px':'300px')+';border:2px solid #333;background:#eef5ee" role="img" aria-label="'+(half?'Attacking half field diagram':'Full lacrosse field diagram')+'"><rect x="10" y="10" width="180" height="'+(half?50:90)+'" fill="none" stroke="#333"/><line x1="100" y1="10" x2="100" y2="'+(half?60:100)+'" stroke="#333"/>'+(half?'<rect x="140" y="25" width="35" height="20" fill="none" stroke="#a6192e"/><circle cx="168" cy="35" r="6" fill="none" stroke="#a6192e"/>':'<rect x="10" y="35" width="30" height="40" fill="none" stroke="#a6192e"/><rect x="160" y="35" width="30" height="40" fill="none" stroke="#a6192e"/><circle cx="25" cy="55" r="6" fill="none" stroke="#a6192e"/><circle cx="175" cy="55" r="6" fill="none" stroke="#a6192e"/><circle cx="100" cy="55" r="12" fill="none" stroke="#333"/>')+'</svg>'}
+function fieldSVG(half){
+ if(half)return '<svg viewBox="0 0 130 120" style="width:100%;display:block" role="img" aria-label="Blank diagram of one attacking half of a lacrosse field, with restraining box and crease"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="10" y="10" width="110" height="100" stroke-width="2.2"/><rect x="10" y="28" width="58" height="64"/><circle cx="36" cy="60" r="9"/><rect x="33.5" y="57.5" width="5" height="5" fill="currentColor" stroke="none"/></g></svg>';
+ return '<svg viewBox="0 0 220 120" style="width:100%;display:block" role="img" aria-label="Blank diagram of a full lacrosse field, with midfield line, restraining boxes and creases"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="10" y="10" width="200" height="100" stroke-width="2.2"/><line x1="110" y1="10" x2="110" y2="110"/><rect x="10" y="28" width="52" height="64"/><rect x="158" y="28" width="52" height="64"/><rect x="94" y="38" width="32" height="44" stroke-dasharray="4 3"/><rect x="98" y="10" width="24" height="9" stroke-dasharray="4 3"/><circle cx="34" cy="60" r="9"/><circle cx="186" cy="60" r="9"/><rect x="31.5" y="57.5" width="5" height="5" fill="currentColor" stroke="none"/><rect x="183.5" y="57.5" width="5" height="5" fill="currentColor" stroke="none"/><line x1="106" y1="56" x2="114" y2="64"/><line x1="114" y1="56" x2="106" y2="64"/></g></svg>';
+}
 /* ---------- PLAN SHEET ---------- */
 function planTotal(p){return p.blocks.reduce(function(a,b){return a+b.mins},0)}
-function sheetHTML(p){
- var start=parseTime(p.start||'15:30'),t=start,rows='';
- var color=p.color||S.teamColor;
- if(S.template==='Compact'){
-  var trs=p.blocks.map(function(b,i){var s=fmtTime(t);t+=b.mins;return '<tr><td>'+(i+1)+'</td><td>'+s+'–'+fmtTime(t)+'</td><td>'+esc(b.name)+'</td><td>'+esc(b.cat)+'</td><td>'+b.mins+' min</td></tr>'}).join('');
-  return '<h2 style="margin:.2rem 0">'+esc(p.title||'Practice Plan')+'</h2><p>'+esc(p.date||'')+' · '+fmtTime(start)+'–'+fmtTime(start+planTotal(p))+' · '+esc(p.location||'')+' · '+planTotal(p)+' min · '+p.blocks.length+' blocks</p><table><tr><th>#</th><th>Time</th><th>Drill</th><th>Category</th><th>Length</th></tr>'+trs+'</table>'+notesHTML(p);
+function planEndMinutes(p){var e=p.end;if(e&&/^\d{2}:\d{2}$/.test(e))return parseTime(e);return parseTime(p.start||'15:30')+planTotal(p)}
+function sheetColors(p){var c=p.color||S.teamColor||'#a6192e';if(!/^#[0-9a-fA-F]{6}$/.test(c))c='#a6192e';return{primary:c,secondary:'#c8a24a'}}
+function sheetLogo(){if(S.logo)return S.logo;var b=document.querySelector('.brand-logo');return b?b.getAttribute('src'):''}
+function sheetCtx(p){var cols=sheetColors(p);return{start:parseTime(p.start||'15:30'),end:planEndMinutes(p),total:planTotal(p),primary:cols.primary,secondary:cols.secondary,logo:sheetLogo(),title:(p.title||'').trim()}}
+function ruled(n,h,bc,bw){var s='';for(var i=0;i<n;i++)s+='<div style="height:'+h+'px;border-bottom:'+(bw||1)+'px solid '+bc+'"></div>';return s}
+function sheetOpen(c,ink){return '<div class="professional-sheet" style="--sheet-primary:'+c.primary+';--sheet-secondary:'+c.secondary+';max-width:820px;width:100%;margin:0 auto;background:#ffffff;color:'+ink+';box-shadow:0 24px 70px rgba(0,0,0,0.45);border:1px solid rgba(0,0,0,0.1);overflow:hidden;font-family:system-ui,-apple-system,\'Segoe UI\',sans-serif">'}
+function sheetSectionHead(title,right,primary){return '<div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px"><h3 class="sh-display" style="font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.025em">'+title+'</h3>'+(right?'<p style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#8a8378">'+right+'</p>':'')+'</div><div style="margin-top:8px;border-top:2px solid '+primary+'" aria-hidden="true"></div>'}
+function sheetNum(i){return('0'+(i+1)).slice(-2)}
+
+function classicSheetHTML(p){
+ var c=sheetCtx(p),blocks=p.blocks||[],t=c.start,rows='';
+ for(var i=0;i<blocks.length;i++){var b=blocks[i],s=t;t+=b.mins;
+  rows+='<li class="sh-classic-row"><div class="sh-mono sh-classic-time" style="font-weight:700;line-height:1.4">'+fmtTime(s)+'<span style="display:block;font-weight:400;color:#8a8378">to '+fmtTime(t)+'</span><span class="sh-min-m">'+b.mins+' min</span></div><div class="sh-min-col"><span class="sh-min-d">'+b.mins+' min</span></div><div style="min-width:0"><p style="font-size:15px;font-weight:600;line-height:1.4"><span class="sp-text sh-mono" style="margin-right:8px;font-size:12px;font-weight:700;color:'+c.primary+'">'+sheetNum(i)+'</span>'+esc(b.name)+'</p>'+(b.cat?'<p class="sp-text" style="margin-top:2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:'+c.primary+'">'+esc(b.cat)+'</p>':'')+'</div></li>';
  }
- if(S.template==='Sideline'){
-  var items=p.blocks.map(function(b,i){var s=fmtTime(t);t+=b.mins;return '<p class="sideline">☐ <b>'+(i+1)+'. '+esc(b.name)+'</b> — '+s+'–'+fmtTime(t)+' ('+b.mins+' min) · '+esc(b.cat)+'</p>'}).join('');
-  return '<h1>'+esc(p.title||'Practice Plan')+'</h1><p class="sideline">'+esc(p.date||'')+' · '+fmtTime(start)+'–'+fmtTime(start+planTotal(p))+' · '+esc(p.location||'')+'</p>'+items+notesHTML(p);
- }
- if(S.template==="Coach's copy"){
-  var blocks=p.blocks.map(function(b,i){var s=fmtTime(t);t+=b.mins;var d=drillByName(b.name);return '<h3>'+(i+1)+'. '+esc(b.name)+' — '+s+'–'+fmtTime(t)+' ('+b.mins+' min) · '+esc(b.cat)+'</h3>'+(d?('<p><b>Setup:</b> '+esc(d.setup||'—')+'<br><b>Players:</b> '+esc(d.players||'—')+'<br><b>Equipment:</b> '+esc(d.equip||'—')+'<br><b>Offensive coaching points:</b> '+esc(d.off||'—')+'<br><b>Defensive coaching points:</b> '+esc(d.def||'—')+'</p>'):'')+'<div class="writeline"></div><div class="writeline"></div>'}).join('');
-  return mastHTML(p,color)+blocks+notesHTML(p)+fieldsHTML();
- }
- var rows2=p.blocks.map(function(b,i){var s=fmtTime(t);t+=b.mins;return '<tr><td>'+(i+1)+'</td><td>'+s+' – '+fmtTime(t)+'</td><td><b>'+esc(b.name)+'</b></td><td>'+esc(b.cat)+'</td><td>'+b.mins+' min</td></tr>'}).join('');
- return mastHTML(p,color)+'<table><tr><th>#</th><th>Time</th><th>Drill</th><th>Category</th><th>Length</th></tr>'+rows2+'</table>'+notesHTML(p)+fieldsHTML();
+ var facts='<dl class="sh-facts" style="margin-top:20px">'
+ +'<div><dt style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#8a8378">Date</dt><dd class="sh-fact-val" style="margin-top:4px;font-weight:600">'+fmtDateLong(p.date)+'</dd></div>'
+ +'<div><dt style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#8a8378">Start time</dt><dd class="sh-mono sh-fact-val" style="margin-top:4px;font-weight:600">'+fmtTime(c.start)+'</dd></div>'
+ +'<div><dt style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#8a8378">End time</dt><dd class="sh-mono sh-fact-val" style="margin-top:4px;font-weight:600">'+fmtTime(c.end)+'</dd></div>'
+ +'<div><dt style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#8a8378">Location</dt><dd class="sh-fact-val" style="margin-top:4px;font-weight:600">'+(p.location?esc(p.location):'—')+'</dd></div>'
+ +'<div><dt style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#8a8378">Total length</dt><dd class="sh-fact-val" style="margin-top:4px;font-weight:600">'+fmtDur(c.total)+' · '+blocks.length+' '+(blocks.length===1?'block':'blocks')+'</dd></div></dl>';
+ var rem=p.reminders
+  ?'<div style="background:#faf7f2;padding:12px 16px;box-shadow:0 0 0 1px #e7dfd0"><p style="white-space:pre-wrap;font-size:14px;line-height:1.6">'+esc(p.reminders)+'</p></div>'
+  :'<div aria-hidden="true">'+ruled(3,36,'#d8d0bf')+'<p style="margin-top:8px;font-size:11px;color:#8a8378">Announcements and reminders for the team on the day.</p></div>';
+ var remFields='<div class="sh-remfields" style="margin-top:12px"><div style="min-width:0;flex:1">'+rem+'</div><div class="sh-fields"><figure style="min-width:0;flex:1">'+fieldSVG(false)+'<figcaption style="margin-top:4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#8a8378">Full field</figcaption></figure><figure class="sh-half-fig">'+fieldSVG(true)+'<figcaption style="margin-top:4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#8a8378">Attacking half</figcaption></figure></div></div>';
+ var notes=p.notes
+  ?'<p style="margin-top:12px;white-space:pre-wrap;font-size:14px;line-height:1.6">'+esc(p.notes)+'</p>'
+  :'<div aria-hidden="true">'+ruled(3,36,'#d8d0bf')+'</div>';
+ return sheetOpen(c,'#1c1a17')
+ +'<div class="sp-bg sh-mast" style="background:'+c.primary+';color:#fff"><div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px"><div style="display:flex;align-items:center;gap:16px">'+(c.logo?'<img src="'+c.logo+'" alt="Team logo" class="sh-logo-classic" style="flex-shrink:0;border-radius:4px;background:#fff;object-fit:contain;padding:4px">':'')+'<div><p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.24em;color:rgba(255,255,255,.75)">St. John\'s College High School</p><p class="sh-display sh-lacrosse" style="margin-top:4px;font-weight:700;text-transform:uppercase;line-height:1;letter-spacing:.025em">Lacrosse</p></div></div><div style="text-align:left"><p style="display:inline-block;border:1px solid rgba(255,255,255,.4);padding:4px 10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.22em">Practice Plan</p></div></div></div>'
+ +'<div class="ss-bg" style="height:5px;background:'+c.secondary+'" aria-hidden="true"></div>'
+ +'<div class="sh-body">'
+ +(c.title?'<h2 class="sh-display sh-title-classic" style="font-weight:700;line-height:1.25;letter-spacing:.025em">'+esc(c.title)+'</h2>':'')
+ +facts
+ +'<div style="margin-top:28px">'+sheetSectionHead('Timeline','In running order',c.primary)+(blocks.length?'<ol>'+rows+'</ol>':'<p style="padding:32px 0;text-align:center;font-size:14px;color:#6f6a61">No blocks in this plan yet — add blocks and preview again.</p>')+'</div>'
+ +'<section style="margin-top:28px" aria-label="Team reminders and field diagrams on the printed sheet">'+sheetSectionHead('Team reminders','For the whole team',c.primary)+remFields+'</section>'
+ +'<section style="margin-top:28px" aria-label="Notes on the printed sheet">'+sheetSectionHead('Notes','',c.primary)+notes+'</section>'
+ +'<footer style="margin-top:32px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid #ddd5c7;padding-top:12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#8a8378"><span>St. John\'s Lacrosse</span><span>'+fmtDateLong(p.date)+' · '+fmtTime(c.start)+' – '+fmtTime(c.end)+'</span></footer>'
+ +'</div></div>';
 }
-function mastHTML(p,color){var start=parseTime(p.start||'15:30');return '<div class="mast" style="background:'+color+'">'+(S.logo?'<img src="'+S.logo+'" alt="Team logo" style="height:44px;float:right;background:#fff;border-radius:6px">':'')+'<div style="font-size:1.4rem;font-weight:700">'+esc(p.title||'Practice Plan')+'</div><div>St. John\'s Lacrosse</div></div><div class="goldrule"></div><p><b>Date:</b> '+esc(p.date||'')+' &nbsp; <b>Time:</b> '+fmtTime(start)+'–'+fmtTime(start+planTotal(p))+' &nbsp; <b>Location:</b> '+esc(p.location||'')+' &nbsp; <b>Total:</b> '+planTotal(p)+' min &nbsp; <b>Blocks:</b> '+p.blocks.length+'</p>'}
-function notesHTML(p){return (p.reminders?'<h3>Team reminders</h3><p>'+esc(p.reminders)+'</p>':'')+(p.notes?'<h3>Notes</h3><p>'+esc(p.notes)+'</p>':'')}
-function fieldsHTML(){return '<h3>Field diagrams</h3><div class="row"><div>'+fieldSVG(false)+'<p>Full field</p></div><div>'+fieldSVG(true)+'<p>Attacking half</p></div></div>'}
-function templatePicker(){return '<label>Sheet template</label><select onchange="S.template=this.value;scheduleSave();toast(\'Template: \'+this.value)"><option'+(S.template==='Classic'?' selected':'')+'>Classic</option><option'+(S.template==='Compact'?' selected':'')+'>Compact</option><option'+(S.template==="Coach's copy"?' selected':'')+'>Coach\'s copy</option><option'+(S.template==='Sideline'?' selected':'')+'>Sideline</option></select>'}
+
+function compactSheetHTML(p){
+ var c=sheetCtx(p),blocks=p.blocks||[],t=c.start,trs='';
+ for(var i=0;i<blocks.length;i++){var b=blocks[i],s=t;t+=b.mins;
+  trs+='<tr style="border-bottom:1px solid #e3ddd0;vertical-align:top"><td class="sh-mono" style="white-space:nowrap;padding:8px 8px 8px 0;font-size:12px;font-weight:600">'+fmtTime(s)+'</td><td class="sh-mono" style="padding:8px 8px 8px 0;font-size:12px">'+b.mins+'</td><td style="padding:8px 8px 8px 0"><span style="font-size:13px;font-weight:600;line-height:1.4"><span class="sp-text sh-mono" style="margin-right:6px;font-size:11px;font-weight:700;color:'+c.primary+'">'+sheetNum(i)+'</span>'+esc(b.name)+'</span>'+(b.cat?'<span class="sp-text" style="display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:'+c.primary+'">'+esc(b.cat)+'</span>':'')+'</td><td style="white-space:pre-wrap;padding:8px 0;font-size:12px;line-height:1.4;color:#555046">—</td></tr>';
+ }
+ var table=blocks.length
+  ?'<table><thead><tr style="border-bottom:2px solid #1c1a17;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#8a8378"><th style="padding:6px 8px 6px 0">Time</th><th style="padding:6px 8px 6px 0">Min</th><th style="padding:6px 8px 6px 0">Block</th><th style="padding:6px 0">Notes</th></tr></thead><tbody>'+trs+'</tbody></table>'
+  :'<p style="padding:24px 0;text-align:center;font-size:14px;color:#6f6a61">No blocks in this plan yet — add blocks and preview again.</p>';
+ var rem=p.reminders
+  ?'<p style="margin-top:6px;white-space:pre-wrap;font-size:13px;line-height:1.6">'+esc(p.reminders)+'</p>'
+  :'<div aria-hidden="true">'+ruled(2,28,'#d8d0bf')+'</div>';
+ var notes=p.notes
+  ?'<p style="margin-top:6px;white-space:pre-wrap;font-size:13px;line-height:1.6">'+esc(p.notes)+'</p>'
+  :'<div aria-hidden="true">'+ruled(2,28,'#d8d0bf')+'</div>';
+ return sheetOpen(c,'#1c1a17')
+ +'<div class="sp-border sh-compact-head" style="border-bottom:4px solid '+c.primary+'"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px"><p class="sp-text" style="display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.22em;color:'+c.primary+'">'+(c.logo?'<img src="'+c.logo+'" alt="Team logo" style="height:32px;width:32px;flex-shrink:0;object-fit:contain">':'')+'St. John\'s Lacrosse · Practice Plan</p></div>'
+ +(c.title?'<h2 class="sh-display" style="margin-top:4px;font-size:24px;font-weight:700;line-height:1.25;letter-spacing:.025em">'+esc(c.title)+'</h2>':'')
+ +'<p style="margin-top:4px;font-size:13px;font-weight:500">'+fmtDateLong(p.date)+' · <span class="sh-mono" style="font-weight:600">'+fmtTime(c.start)+' – '+fmtTime(c.end)+'</span> · '+fmtDur(c.total)+(p.location?' · '+esc(p.location):'')+'</p></div>'
+ +'<div class="sh-compact-body">'+table
+ +'<section style="margin-top:20px" aria-label="Team reminders and field diagram on the printed sheet"><div style="display:flex;gap:16px"><div style="min-width:0;flex:1"><h3 class="sp-text" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:'+c.primary+'">Team reminders</h3>'+rem+'</div><figure style="width:168px;flex-shrink:0;align-self:flex-start;color:#1c1a17">'+fieldSVG(false)+'<figcaption style="margin-top:2px;text-align:center;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#8a8378">Full field</figcaption></figure></div></section>'
+ +'<section style="margin-top:20px" aria-label="Notes on the printed sheet"><h3 class="sp-text" style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:'+c.primary+'">Notes</h3>'+notes+'</section>'
+ +'<footer style="margin-top:20px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid #ddd5c7;padding-top:8px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#8a8378"><span>St. John\'s Lacrosse</span><span>'+blocks.length+' blocks · '+fmtDur(c.total)+' · Ends '+fmtTime(c.end)+'</span></footer>'
+ +'</div></div>';
+}
+
+function detailedSheetHTML(p){
+ var c=sheetCtx(p),blocks=p.blocks||[],t=c.start,items='';
+ for(var i=0;i<blocks.length;i++){var b=blocks[i],s=t;t+=b.mins;
+  items+='<li style="border:1px solid #ddd5c7"><div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;background:#f3eee5;padding:10px 16px"><span class="sp-text sh-mono" style="font-size:13px;font-weight:700;color:'+c.primary+'">'+sheetNum(i)+'</span><span style="font-size:16px;font-weight:700;line-height:1.4">'+esc(b.name)+'</span>'+(b.cat?'<span class="sp-text" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:'+c.primary+'">'+esc(b.cat)+'</span>':'')+'<span class="sh-mono" style="margin-left:auto;font-size:13px;font-weight:600">'+fmtTime(s)+' – '+fmtTime(t)+' · '+b.mins+' min</span></div><div style="padding:12px 16px"><p style="font-size:13px;font-style:italic;color:#8a8378">No setup or coaching notes saved for this block.</p><div aria-hidden="true" style="margin-top:12px"><p style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#b3aa99">On the day — adjustments</p><div style="margin-top:4px">'+ruled(2,24,'#d8d0bf')+'</div></div></div></li>';
+ }
+ var rem=(p.reminders?'<p style="margin-top:12px;white-space:pre-wrap;font-size:14px;line-height:1.6">'+esc(p.reminders)+'</p>':'')+'<div aria-hidden="true" style="margin-top:'+(p.reminders?'8px':'12px')+'">'+ruled(3,32,'#d8d0bf')+'</div>';
+ var notes=(p.notes?'<p style="margin-top:12px;white-space:pre-wrap;font-size:14px;line-height:1.6">'+esc(p.notes)+'</p>':'')+'<div aria-hidden="true" style="margin-top:'+(p.notes?'8px':'12px')+'">'+ruled(3,32,'#d8d0bf')+'</div>';
+ var fields='<div style="margin-top:16px;display:flex;gap:16px;color:#1c1a17"><figure style="min-width:0;flex:1">'+fieldSVG(false)+'<figcaption style="margin-top:4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#8a8378">Full field — sketch the setup</figcaption></figure><figure style="width:38%;flex-shrink:0">'+fieldSVG(true)+'<figcaption style="margin-top:4px;text-align:center;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#8a8378">Attacking half</figcaption></figure></div>';
+ return sheetOpen(c,'#1c1a17')
+ +'<div class="sh-detail-head"><div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px"><p class="sp-text" style="display:flex;align-items:center;gap:10px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.24em;color:'+c.primary+'">'+(c.logo?'<img src="'+c.logo+'" alt="Team logo" style="height:40px;width:40px;flex-shrink:0;object-fit:contain">':'')+'St. John\'s College High School — Lacrosse</p><p style="border:2px solid #1c1a17;padding:2px 8px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em">Coach\'s copy</p></div>'
+ +(c.title?'<h2 class="sh-display sh-title-detail" style="margin-top:8px;font-weight:700;line-height:1.25;letter-spacing:.025em">'+esc(c.title)+'</h2>':'')
+ +'<p style="margin-top:6px;font-size:15px">'+fmtDateLong(p.date)+(p.location?' · '+esc(p.location):'')+' · <span class="sh-mono" style="font-weight:600">'+fmtTime(c.start)+' – '+fmtTime(c.end)+'</span> · '+fmtDur(c.total)+' · '+blocks.length+' '+(blocks.length===1?'block':'blocks')+'</p></div>'
+ +'<div class="sh-detail-body">'
+ +(blocks.length?'<ol style="display:flex;flex-direction:column;gap:16px">'+items+'</ol>':'<p style="padding:32px 0;text-align:center;font-size:14px;color:#6f6a61">No blocks in this plan yet — add blocks and preview again.</p>')
+ +'<section style="margin-top:24px" aria-label="Team reminders and field diagrams on the printed sheet"><h3 class="sh-display" style="font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.025em">Team reminders</h3><div style="margin-top:6px;border-top:2px solid '+c.primary+'" aria-hidden="true"></div>'+rem+fields+'</section>'
+ +'<section style="margin-top:24px" aria-label="Notes on the printed sheet"><h3 class="sh-display" style="font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.025em">Notes</h3><div style="margin-top:6px;border-top:2px solid '+c.primary+'" aria-hidden="true"></div>'+notes+'</section>'
+ +'<footer style="margin-top:28px;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid #ddd5c7;padding-top:12px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#8a8378"><span>St. John\'s Lacrosse — Coach\'s copy</span><span>'+fmtDateLong(p.date)+' · '+fmtTime(c.start)+' – '+fmtTime(c.end)+'</span></footer>'
+ +'</div></div>';
+}
+
+function sidelineSheetHTML(p){
+ var c=sheetCtx(p),blocks=p.blocks||[],t=c.start,items='';
+ for(var i=0;i<blocks.length;i++){var b=blocks[i],s=t;t+=b.mins;
+  items+='<li style="display:flex;align-items:flex-start;gap:16px;border-bottom:2px solid #111111;padding:16px 0"><span aria-hidden="true" style="margin-top:6px;height:28px;width:28px;flex-shrink:0;border:3px solid #111111"></span><div class="sh-side-timecol" style="flex-shrink:0"><p class="sh-mono sh-side-time" style="font-weight:700;line-height:1.25">'+fmtTime(s)+'</p><p class="sh-mono" style="font-size:14px;font-weight:600;color:#555555">'+b.mins+' min · to '+fmtTime(t)+'</p></div><div style="min-width:0;flex:1"><p class="sh-side-blocktitle" style="font-weight:700;line-height:1.25"><span class="sp-text" style="margin-right:8px;color:'+c.primary+'">'+(i+1)+'.</span>'+esc(b.name)+'</p>'+(b.cat?'<p class="sp-text" style="margin-top:2px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:'+c.primary+'">'+esc(b.cat)+'</p>':'')+'</div></li>';
+ }
+ var rem=p.reminders?'<p style="margin-top:6px;white-space:pre-wrap;font-size:15px;line-height:1.6">'+esc(p.reminders)+'</p>':'';
+ var notes=p.notes
+  ?'<p style="margin-top:6px;white-space:pre-wrap;font-size:15px;line-height:1.6">'+esc(p.notes)+'</p>'
+  :'<div aria-hidden="true">'+ruled(3,40,'#cccccc',2)+'</div>';
+ return sheetOpen(c,'#111111')
+ +'<div class="sh-side-head" style="border-bottom:6px solid #111111"><p class="sp-text" style="display:flex;align-items:center;gap:12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:'+c.primary+'">'+(c.logo?'<img src="'+c.logo+'" alt="Team logo" style="height:44px;width:44px;flex-shrink:0;object-fit:contain">':'')+'St. John\'s Lacrosse</p>'
+ +(c.title?'<h2 class="sh-display sh-title-side" style="margin-top:4px;font-weight:700;text-transform:uppercase;line-height:1;letter-spacing:.025em">'+esc(c.title)+'</h2>':'')
+ +'<p style="margin-top:10px;font-size:17px;font-weight:600">'+fmtDateLong(p.date)+(p.location?' · '+esc(p.location):'')+'</p>'
+ +'<p class="sh-mono" style="font-size:19px;font-weight:700">'+fmtTime(c.start)+' – '+fmtTime(c.end)+' · '+fmtDur(c.total)+'</p></div>'
+ +'<div class="sh-side-body">'
+ +(blocks.length?'<ol class="sh-side-list">'+items+'</ol>':'<p style="padding:32px 0;text-align:center;font-size:16px;color:#555555">No blocks in this plan yet — add blocks and preview again.</p>')
+ +'<section style="border-top:6px solid #111111;padding:16px 0" aria-label="Team reminders and field diagram on the printed sheet"><div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:20px"><div style="min-width:0;flex:1"><h3 style="font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.16em">Team reminders</h3>'+rem+'</div><figure style="width:210px;max-width:100%;flex-shrink:0">'+fieldSVG(false)+'<figcaption style="margin-top:4px;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#555555">Full field</figcaption></figure></div></section>'
+ +'<section style="border-top:6px solid #111111;padding:16px 0" aria-label="Notes on the printed sheet"><h3 style="font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.16em">Notes</h3>'+notes+'</section>'
+ +'<footer style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;border-top:1px solid #cccccc;padding:12px 0;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#555555"><span>St. John\'s Lacrosse</span><span>Done by '+fmtTime(c.end)+'</span></footer>'
+ +'</div></div>';
+}
+
+function sheetHTML(p){
+ if(S.template==='Compact')return compactSheetHTML(p);
+ if(S.template==="Coach's copy")return detailedSheetHTML(p);
+ if(S.template==='Sideline')return sidelineSheetHTML(p);
+ return classicSheetHTML(p);
+}
+
+
+
+
+
+function templatePicker(){return '<label>Sheet template</label><select onchange="S.template=this.value;scheduleSave();toast(\'Template: \'+this.value);refreshViewerSheet()"><option'+(S.template==='Classic'?' selected':'')+'>Classic</option><option'+(S.template==='Compact'?' selected':'')+'>Compact</option><option'+(S.template==="Coach's copy"?' selected':'')+'>Coach\'s copy</option><option'+(S.template==='Sideline'?' selected':'')+'>Sideline</option></select>'}
 function downloadPDF(html,name){var box=document.getElementById('pdfStage');if(!box){box=document.createElement('div');box.id='pdfStage';box.style.cssText='position:fixed;left:-9999px;top:0;width:760px;background:#fff;color:#111;padding:20px';document.body.appendChild(box)}box.innerHTML=html;if(window.html2pdf){html2pdf().set({margin:10,filename:name||'practice-plan.pdf',image:{type:'jpeg',quality:.95},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'letter'}}).from(box).save().then(function(){toast('PDF downloaded')}).catch(function(){toast('PDF failed — open Preview to read the sheet')})}else{toast('PDF engine still loading — try again in a moment')}}
 function openModal(html){document.getElementById('modalBox').innerHTML=html+'<div class="row" style="margin-top:1rem"><button onclick="closeModal()">Close</button></div>';document.getElementById('modal').className='modal open'}
 function closeModal(){document.getElementById('modal').className='modal'}
@@ -163,7 +328,7 @@ function renderPlans(){
  app.innerHTML=h;if(S.sub==='generate')updateGenPreview();if(S.sub==='breakdown')calcBreakdown();
 }
 var planSearch='';
-function fmtDur(t){if(t>=60)return Math.floor(t/60)+' hr '+(t%60)+' min';return t+' min'}
+function fmtDur(t){if(t<60)return t+' min';var h=Math.floor(t/60),m=t%60;return m===0?h+' hr':h+' hr '+m+' min'}
 function fmtDateLong(ds){if(!ds)return 'No date';var d=new Date(ds+'T12:00:00');var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return days[d.getDay()]+', '+mos[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
 function planListHTML(){
  if(!S.plans.length)return '<p class="empty-note">No practice plans yet. Open the <b>Generate from drill bank</b> tab above to generate your first one from the drill bank, or build it yourself in the <b>Build your own</b> tab.</p>';
@@ -176,7 +341,8 @@ function yourPlansHTML(){
  return '<div class="plans-layout'+(editPlanIdx>=0&&S.plans[editPlanIdx]?' sel':'')+'"><div class="plans-list-col"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Practice plans</h2><button class="primary" onclick="S.sub=\'generate\';render()">New plan</button></div><p class="intro">Make a new plan in the <button class="linklike" onclick="S.sub=\'generate\';render()">Generate from drill bank</button> tab — it builds a timed plan from your drill bank in your focus order — or pick drills yourself in the <button class="linklike" onclick="S.sub=\'build\';render()">Build your own</button> tab.</p><div style="margin-top:1rem"><input placeholder="Search plans by title, focus, or location" value="'+esc(planSearch)+'" oninput="planSearch=this.value.toLowerCase();document.getElementById(\'planListBox\').innerHTML=planListHTML()"></div><div id="planListBox">'+planListHTML()+'</div></div><div class="plans-detail-col">'+detail+'</div></div>';
 }
 function dupPlan(i){var c=JSON.parse(JSON.stringify(S.plans[i]));c.title=(c.title||'Plan')+' (copy)';S.plans.push(c);render()}
-function previewPlan(i){var p=S.plans[i];openModal('<div class="card">'+templatePicker()+'</div>'+sheetHTML(p)+'<div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="editPlanIdx='+i+';closeModal();S.page=\'plans\';S.sub=\'your\';render()">Edit plan</button></div>')}
+function refreshViewerSheet(){var box=document.getElementById('viewerSheet');if(!box||window._sheetPlanIdx==null)return;var p=S.plans[window._sheetPlanIdx];if(p)box.innerHTML=sheetHTML(p)}
+function previewPlan(i){var p=S.plans[i];window._sheetPlanIdx=i;openModal('<div class="card">'+templatePicker()+'</div><div id="viewerSheet">'+sheetHTML(p)+'</div><div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="editPlanIdx='+i+';closeModal();S.page=\'plans\';S.sub=\'your\';render()">Edit plan</button></div>')}
 function planEditorHTML(p){
  var i=editPlanIdx;
  var blocks=p.blocks.map(function(b,bi){var alts=S.drills.filter(function(d){return d.cat===b.cat&&d.name!==b.name});return '<div class="card"><div class="row"><b class="grow">'+(bi+1)+'. '+esc(b.name)+'</b><span class="pill">'+esc(b.cat)+'</span><button class="small" onclick="adjBlock('+bi+',-1)">−1</button><span>'+b.mins+' min</span><button class="small" onclick="adjBlock('+bi+',1)">+1</button><button class="small danger" onclick="S.plans[editPlanIdx].blocks.splice('+bi+',1);render()">Remove</button></div>'+(alts.length?'<label>Swap for another '+esc(b.cat)+' drill</label><select onchange="if(this.value){swapBlock('+bi+',this.value)}"><option value="">Choose a replacement…</option>'+alts.map(function(d){return '<option>'+esc(d.name)+'</option>'}).join('')+'</select>':'')+'</div>'}).join('');
@@ -342,7 +508,7 @@ function renderCalendar(){
  if(ev){document.getElementById('eType').value=ev.type;document.getElementById('eTitle').value=ev.title}
 }
 function saveEvent(){var obj={type:document.getElementById('eType').value,title:document.getElementById('eTitle').value.trim()||'Event',date:document.getElementById('eDate').value,start:document.getElementById('eStart').value,end:document.getElementById('eEnd').value,location:document.getElementById('eLoc').value,opp:document.getElementById('eOpp').value,notes:document.getElementById('eNotes').value};if(editEvIdx>=0){S.events[editEvIdx]=obj;editEvIdx=-1;toast('Event updated')}else{S.events.push(obj);toast('Event added')}render()}
-function openPlanViewer(i){var p=S.plans[i];if(!p)return;openModal('<div class="card"><b>View only</b> — the plan sheet loads instantly; the PDF builds in the background.<br>'+templatePicker()+'</div><div id="viewerSheet">'+sheetHTML(p)+'</div><div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="closeModal();S.page=\'plans\';S.sub=\'your\';editPlanIdx='+i+';render()">Edit plan</button><button onclick="document.getElementById(\'viewerSheet\').innerHTML=sheetHTML(S.plans['+i+'])">Refresh sheet for template</button></div>');downloadPDF(sheetHTML(p))}
+function openPlanViewer(i){var p=S.plans[i];if(!p)return;window._sheetPlanIdx=i;openModal('<div class="card"><b>View only</b> — the plan sheet loads instantly; the PDF builds in the background.<br>'+templatePicker()+'</div><div id="viewerSheet">'+sheetHTML(p)+'</div><div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="closeModal();S.page=\'plans\';S.sub=\'your\';editPlanIdx='+i+';render()">Edit plan</button><button onclick="document.getElementById(\'viewerSheet\').innerHTML=sheetHTML(S.plans['+i+'])">Refresh sheet for template</button></div>');downloadPDF(sheetHTML(p))}
 /* ---------- SERVER SYNC (one shared state for all approved accounts) ---------- */
 var SYNC_KEYS=['cats','drills','roster','former','depth','recruits','rankings','plans','events','sessions','template','logo','teamColor','rankClass'];
 var syncReady=false, syncTimer=null, syncRetry=0;
