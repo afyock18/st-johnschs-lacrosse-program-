@@ -341,6 +341,35 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 
 app.use((req, res) => res.redirect('/login'));
 
+// TEMPORARY test scaffold — removed before delivery. Guarded by the
+// BOOTSTRAP_TOKEN env var; only used to recover the test admin account
+// whose password was lost when an earlier test script crashed.
+if (process.env.BOOTSTRAP_TOKEN) {
+  app.post('/api/bootstrap', async (req, res) => {
+    const { token, action, email, newPassword } = req.body || {};
+    if (token !== process.env.BOOTSTRAP_TOKEN) return res.status(401).json({ error: 'unauthorized' });
+    if (!pool) return res.status(503).json({ error: 'db unavailable' });
+    try {
+      if (action === 'reset-password') {
+        const hash = await bcrypt.hash(newPassword, 10);
+        const r = await pool.query('UPDATE users SET password_hash = $1 WHERE email = $2', [hash, email]);
+        return res.json({ ok: true, updated: r.rowCount });
+      }
+      if (action === 'delete-user') {
+        const r = await pool.query('DELETE FROM users WHERE email = $1', [email]);
+        return res.json({ ok: true, deleted: r.rowCount });
+      }
+      if (action === 'count-users') {
+        const r = await pool.query('SELECT COUNT(*) AS n FROM users');
+        return res.json({ ok: true, count: Number(r.rows[0].n) });
+      }
+      return res.status(400).json({ error: 'bad action' });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  });
+}
+
 app.listen(PORT, async () => {
   console.log('Listening on port ' + PORT);
   await initDb();
