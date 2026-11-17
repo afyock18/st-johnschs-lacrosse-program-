@@ -8,33 +8,55 @@
 <title>St. John's Lacrosse Practice Plans — Shared</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
-:root{--red:#a6192e;--gold:#c8a24a;--bg:#f7f5f2;--card:#ffffff;--ink:#1c1a17;--mut:#5c564e;--line:#ddd6cc;--soft:#f0ece5;--green:#1e7a3c;--blue:#2456a6;--bad:#b3261e}
-@media (prefers-color-scheme:dark){:root{--bg:#171412;--card:#221f1c;--ink:#f2ede6;--mut:#b8b0a4;--line:#3d3833;--soft:#2c2824}}
-*{box-sizing:border-box}body{margin:0;font-family:Georgia,'Times New Roman',serif;background:var(--bg);color:var(--ink)}
-button,[role=button],select,input:not([type=checkbox]),textarea{min-height:2.25rem;font-family:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:.45rem .8rem;font-size:.95rem}
-button.primary{background:var(--red);color:#fff;border-color:var(--red);font-weight:700}
-button.gold{background:var(--gold);color:#1c1a17;border-color:var(--gold);font-weight:700}
-button.danger{color:var(--bad)}button.small{padding:.25rem .55rem;min-height:2rem;font-size:.85rem}
-input,select,textarea{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:.45rem .6rem;font-size:.95rem;width:100%}
-label{font-size:.85rem;font-weight:700;display:block;margin:.5rem 0 .25rem}
-.banner{background:var(--red);color:#fff;padding:.7rem 1rem;font-size:.95rem;line-height:1.45;text-align:center}
-.banner b{color:#ffd98a}
-.wrap{max-width:1100px;margin:0 auto;padding:1rem}
-h1{font-size:1.7rem;margin:.4rem 0 .2rem}h2{font-size:1.3rem;margin:1rem 0 .5rem}h3{font-size:1.05rem;margin:.8rem 0 .4rem}
-.sub{color:var(--mut);margin:.2rem 0 1rem}
-nav.tabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:1rem 0}
-nav.tabs button.active,.subtabs button.active{background:var(--red);color:#fff;border-color:var(--red)}
-.subtabs{display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0 1rem}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1rem;margin:.7rem 0}
+:root{--red:#a6192e;--red-ink:#ffffff;--gold:#c8a24a;--bg:#faf7f2;--card:#ffffff;--ink:#1c1a17;--mut:#6f6a61;--line:#ddd5c7;--soft:#f3eee5;--green:#1e7a3c;--blue:#2456a6;--bad:#b3261e;--display:"Arial Narrow","Helvetica Neue","Roboto Condensed",sans-serif}
+@media (prefers-color-scheme:dark){:root{--red:#e05260;--red-ink:#1c0a0d;--bg:#17140f;--card:#221e18;--ink:#f2ede3;--mut:#a89f8f;--line:#3d372c;--soft:#2b261e;--bad:#e05260}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);font-size:16px;line-height:1.45}
+button,[role=button],select,input:not([type=checkbox]),textarea{min-height:2rem;font-family:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:.5rem .75rem;font-size:.875rem;font-weight:500}
+button.primary{background:var(--red);color:var(--red-ink);border-color:var(--red);font-weight:600;padding:.5rem 1rem}
+button.gold{background:var(--gold);color:#1c1a17;border-color:var(--gold);font-weight:600}
+button.danger{color:var(--bad)}button.small{border-radius:6px;padding:.25rem .5rem;font-size:.75rem}
+input,select,textarea{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:.5rem .75rem;font-size:1rem;width:100%}
+label{font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.025em;color:var(--mut);display:block;margin:.6rem 0 .3rem}
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1152px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;padding:.75rem 1rem}
+.brand{font-family:var(--display);font-size:1.125rem;font-weight:700;text-transform:uppercase;letter-spacing:.025em;color:var(--red);margin-right:.25rem}
+.shared-note{background:var(--soft);color:var(--mut);font-size:.85rem;text-align:center;padding:.5rem 1rem;border-bottom:1px solid var(--line)}
+.shared-note b{color:var(--ink)}
+.wrap{max-width:1152px;margin:0 auto;padding:0 1rem 4rem}
+h1{font-family:var(--display);font-size:1.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.025em;margin:.4rem 0 .2rem}h2{font-family:var(--display);font-size:1.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.025em;margin:1rem 0 .5rem}h3{font-family:var(--display);font-size:1.125rem;font-weight:700;text-transform:uppercase;letter-spacing:.025em;margin:.8rem 0 .4rem}
+.sub{color:var(--mut);font-size:.875rem;margin:.2rem 0 1rem}
+nav.tabs{display:flex;flex-wrap:wrap;gap:.25rem;margin-left:auto}
+nav.tabs button{border:none;background:transparent;color:var(--mut);font-weight:600;padding:.5rem .75rem}
+nav.tabs button.active{background:var(--red);color:var(--red-ink)}
+.subtabs{display:flex;flex-wrap:wrap;gap:.25rem;margin:1rem 0 .5rem}
+.subtabs button{border-radius:999px;padding:.5rem .875rem;font-weight:600;color:var(--mut)}
+.subtabs button.active{background:var(--red);color:var(--red-ink);border-color:var(--red)}
+.linklike{background:none;border:none;color:var(--red);font-weight:600;text-decoration:underline;text-underline-offset:2px;padding:0;min-height:0;font-size:inherit;display:inline}
+.intro{font-size:.875rem;line-height:1.6;color:var(--mut);margin:.5rem 0 0;max-width:34rem}
+.planlist{list-style:none;margin:1rem 0 0;padding:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.planlist li+li{border-top:1px solid var(--line)}
+.planrow{display:flex;width:100%;align-items:flex-start;gap:.75rem;text-align:left;background:transparent;border:none;border-radius:0;padding:.75rem .5rem}
+.planrow.active{background:var(--soft)}
+.planrow-main{flex:1;min-width:0}
+.planrow-title{display:block;font-size:1rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.planrow-meta{display:block;font-size:.875rem;color:var(--mut);margin-top:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.planrow-side{flex-shrink:0;text-align:right}
+.planrow-dur{display:block;font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.875rem;font-weight:600}
+.badge-draft{display:inline-block;border:1px solid var(--line);color:var(--mut);border-radius:999px;padding:.1rem .5rem;font-size:.75rem;font-weight:600;margin-top:.25rem}
+.plans-empty-note{color:var(--mut);text-align:center;padding:4rem 1rem}
+.empty-note{color:var(--mut);text-align:center;margin-top:2rem;font-size:.875rem;line-height:1.6}
+@media(min-width:1024px){.plans-layout{display:grid;grid-template-columns:340px 1fr;gap:2rem}.only-mobile{display:none}}
+@media(max-width:1023px){.plans-layout.sel .plans-list-col{display:none}.plans-layout:not(.sel) .plans-detail-col{display:none}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:1rem;margin:.75rem 0}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.8rem}
 .row{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
 .row>*{flex:0 1 auto}.grow{flex:1 1 160px}
 table{border-collapse:collapse;width:100%;font-size:.9rem}
 th,td{border:1px solid var(--line);padding:.35rem .45rem;text-align:left;vertical-align:top}
 th{background:var(--soft)}
-.chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.35rem .7rem;margin:.15rem;cursor:pointer;background:var(--card);min-height:2.25rem}
-.chip.on{background:var(--red);color:#fff;border-color:var(--red)}
+.chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:.5rem .875rem;margin:.15rem;cursor:pointer;background:var(--card);font-weight:600;font-size:.875rem;color:var(--mut)}
+.chip.on{background:var(--red);color:var(--red-ink);border-color:var(--red)}
 .pill{display:inline-block;background:var(--soft);border-radius:999px;padding:.1rem .55rem;font-size:.8rem;margin-right:.3rem}
 .committed{color:var(--red);font-weight:700}
 .stars{font-size:1.3rem;letter-spacing:.1rem;cursor:pointer;color:var(--gold);user-select:none}
@@ -52,7 +74,7 @@ summary{cursor:pointer;font-weight:700;min-height:2.25rem;display:flex;align-ite
 .cal .day.dim{opacity:.45}.cal .ev{border-radius:5px;color:#fff;padding:.1rem .3rem;margin:.15rem 0;cursor:pointer}
 .ev.practice{background:var(--red)}.ev.lift{background:var(--blue)}.ev.game{background:var(--green)}.ev.other{background:#6b6259}
 .kpi{font-size:1.5rem;font-weight:700}
-.mast{background:var(--red);color:#fff;padding:1rem;border-radius:6px 6px 0 0}
+.mast{background:var(--red);color:#fff;padding:1rem;border-radius:6px 6px 0 0;font-family:var(--display);letter-spacing:.025em}
 .goldrule{height:5px;background:var(--gold)}
 .sideline{font-size:1.25rem}
 .writeline{border-bottom:1px solid #999;height:1.6rem}
@@ -61,13 +83,11 @@ summary{cursor:pointer;font-weight:700;min-height:2.25rem;display:flex;align-ite
 </style>
 </head>
 <body>
-<div class="banner"><b>Shared view</b> — use every feature in your own browser. Your changes stay on your device and reset when you reload. Only Aleric can update this program.</div>
-<div class="wrap">
-<h1>St. John's Lacrosse — Practice Plans</h1>
-<p class="sub">Cadets lacrosse: practice plans, drill bank, roster, depth chart, recruits, stat tracking, and master calendar.</p>
-<nav class="tabs" id="mainTabs"></nav>
+<header class="topbar"><div class="topbar-in"><span class="brand">St. John&rsquo;s Lacrosse</span><nav class="tabs" id="mainTabs"></nav></div></header>
+<div class="shared-note"><b>Shared view</b> — use every feature in your own browser. Your changes stay on your device and reset when you reload. Only Aleric can update this program.</div>
+<main class="wrap">
 <div id="app"></div>
-</div>
+</main>
 <div class="modal" id="modal"><div class="sheet" id="modalBox"></div></div>
 <div class="toast" id="toast"></div>
 <div id="cfBar" style="display:none;position:fixed;bottom:4.5rem;left:50%;transform:translateX(-50%);background:var(--card);color:var(--ink);border:2px solid var(--red);border-radius:10px;padding:.8rem 1rem;z-index:100;max-width:92vw;box-shadow:0 4px 18px rgba(0,0,0,.3)"><div id="cfMsg" style="margin-bottom:.5rem"></div><div class="row"><button class="primary" onclick="cfYes()">Yes, do it</button><button onclick="cfNo()">Cancel</button></div></div>
@@ -100,7 +120,7 @@ function parseTime(t){if(!t)return 15*60+30;var p=t.split(':');return (+p[0])*60
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 </script>
 <script>
-var PAGES=[['plans','Practice Plans'],['drills','Drill Bank'],['roster','Roster'],['depth','Depth Chart'],['recruits','Recruits'],['stats','Stat Tracking'],['calendar','Master Calendar']];
+var PAGES=[['plans','Practice plans'],['drills','Drill bank'],['roster','Roster'],['depth','Depth chart'],['recruits','Recruits'],['stats','Stat tracking'],['calendar','Calendar']];
 var app=document.getElementById('app');
 function renderTabs(){document.getElementById('mainTabs').innerHTML=PAGES.map(function(p){return '<button class="'+(S.page===p[0]?'active':'')+'" onclick="go(\''+p[0]+'\')">'+p[1]+'</button>'}).join('')}
 function go(p){S.page=p;render()}
@@ -137,15 +157,23 @@ function closeModal(){document.getElementById('modal').className='modal'}
 /* ---------- PLANS ---------- */
 var editPlanIdx=-1;
 function renderPlans(){
- var subs=[['your','Your Plans'],['generate','Generate from Drill Bank'],['build','Build your own'],['breakdown','Monthly breakdown']];
+ var subs=[['your','Your plans'],['generate','Generate from drill bank'],['build','Build your own'],['breakdown','Monthly breakdown']];
  var h='<div class="subtabs">'+subs.map(function(s){return '<button class="'+(S.sub===s[0]?'active':'')+'" onclick="S.sub=\''+s[0]+'\';render()">'+s[1]+'</button>'}).join('')+'</div>';
  if(S.sub==='your')h+=yourPlansHTML();else if(S.sub==='generate')h+=genHTML();else if(S.sub==='build')h+=buildHTML();else h+=breakdownHTML();
  app.innerHTML=h;if(S.sub==='generate')updateGenPreview();if(S.sub==='breakdown')calcBreakdown();
 }
+var planSearch='';
+function fmtDur(t){if(t>=60)return Math.floor(t/60)+' hr '+(t%60)+' min';return t+' min'}
+function fmtDateLong(ds){if(!ds)return 'No date';var d=new Date(ds+'T12:00:00');var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'],mos=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return days[d.getDay()]+', '+mos[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear()}
+function planListHTML(){
+ if(!S.plans.length)return '<p class="empty-note">No practice plans yet. Open the <b>Generate from drill bank</b> tab above to generate your first one from the drill bank, or build it yourself in the <b>Build your own</b> tab.</p>';
+ var list=S.plans.map(function(p,i){return{p:p,i:i}}).filter(function(x){if(!planSearch)return true;var hay=((x.p.title||'')+' '+(x.p.focus||[]).join(' ')+' '+(x.p.location||'')).toLowerCase();return hay.indexOf(planSearch)>=0});
+ if(!list.length)return '<p class="empty-note">No plans match that search.</p>';
+ return '<ul class="planlist">'+list.map(function(x){var p=x.p;var endStr=p.end?fmtTime(parseTime(p.end)):(p.start?fmtTime(parseTime(p.start)+planTotal(p)):'');return '<li><button class="planrow'+(editPlanIdx===x.i?' active':'')+'" onclick="editPlanIdx='+x.i+';render()"><span class="planrow-main"><span class="planrow-title">'+esc(p.title||'Untitled plan')+'</span><span class="planrow-meta">'+fmtDateLong(p.date)+(p.start?' · '+fmtTime(parseTime(p.start))+' – '+endStr:'')+(p.location?' · '+esc(p.location):'')+'</span>'+(p.focus&&p.focus.length?'<span class="planrow-meta">Focus: '+esc(p.focus.join(', '))+'</span>':'')+'</span><span class="planrow-side"><span class="planrow-dur">'+fmtDur(planTotal(p))+'</span><span class="badge-draft">Draft</span></span></button></li>'}).join('')+'</ul>';
+}
 function yourPlansHTML(){
- if(editPlanIdx>=0&&S.plans[editPlanIdx])return planEditorHTML(S.plans[editPlanIdx]);
- if(!S.plans.length)return '<div class="card"><h2>No saved plans yet</h2><p>Generate one from the drill bank or build your own — it will appear here.</p></div>';
- return S.plans.map(function(p,i){return '<div class="card"><h3>'+esc(p.title||'Untitled plan')+'</h3><p>'+esc(p.date||'No date')+' · '+(p.start?fmtTime(parseTime(p.start)):'')+(p.end?'–'+fmtTime(parseTime(p.end)):'')+' · '+esc(p.location||'')+' · '+planTotal(p)+' min · '+p.blocks.length+' blocks</p><div class="row"><button class="primary" onclick="editPlanIdx='+i+';render()">Edit plan</button><button onclick="previewPlan('+i+')">Preview</button><button onclick="downloadPDF(sheetHTML(S.plans['+i+']),\'plan.pdf\')">Download PDF</button><button onclick="dupPlan('+i+')">Duplicate</button><button class="danger" onclick="askConfirm(\'Delete this plan?\',function(){S.plans.splice('+i+',1);render()})">Delete</button></div></div>'}).join('');
+ var detail=(editPlanIdx>=0&&S.plans[editPlanIdx])?planEditorHTML(S.plans[editPlanIdx]):'<p class="plans-empty-note">Pick a practice plan to see its timed timeline — or make a new one in the Generate from drill bank or Build your own tabs above.</p>';
+ return '<div class="plans-layout'+(editPlanIdx>=0&&S.plans[editPlanIdx]?' sel':'')+'"><div class="plans-list-col"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Practice plans</h2><button class="primary" onclick="S.sub=\'generate\';render()">New plan</button></div><p class="intro">Make a new plan in the <button class="linklike" onclick="S.sub=\'generate\';render()">Generate from drill bank</button> tab — it builds a timed plan from your drill bank in your focus order — or pick drills yourself in the <button class="linklike" onclick="S.sub=\'build\';render()">Build your own</button> tab.</p><div style="margin-top:1rem"><input placeholder="Search plans by title, focus, or location" value="'+esc(planSearch)+'" oninput="planSearch=this.value.toLowerCase();document.getElementById(\'planListBox\').innerHTML=planListHTML()"></div><div id="planListBox">'+planListHTML()+'</div></div><div class="plans-detail-col">'+detail+'</div></div>';
 }
 function dupPlan(i){var c=JSON.parse(JSON.stringify(S.plans[i]));c.title=(c.title||'Plan')+' (copy)';S.plans.push(c);render()}
 function previewPlan(i){var p=S.plans[i];openModal('<div class="card">'+templatePicker()+'</div>'+sheetHTML(p)+'<div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="editPlanIdx='+i+';closeModal();S.page=\'plans\';S.sub=\'your\';render()">Edit plan</button></div>')}
@@ -153,7 +181,7 @@ function planEditorHTML(p){
  var i=editPlanIdx;
  var blocks=p.blocks.map(function(b,bi){var alts=S.drills.filter(function(d){return d.cat===b.cat&&d.name!==b.name});return '<div class="card"><div class="row"><b class="grow">'+(bi+1)+'. '+esc(b.name)+'</b><span class="pill">'+esc(b.cat)+'</span><button class="small" onclick="adjBlock('+bi+',-1)">−1</button><span>'+b.mins+' min</span><button class="small" onclick="adjBlock('+bi+',1)">+1</button><button class="small danger" onclick="S.plans[editPlanIdx].blocks.splice('+bi+',1);render()">Remove</button></div>'+(alts.length?'<label>Swap for another '+esc(b.cat)+' drill</label><select onchange="if(this.value){swapBlock('+bi+',this.value)}"><option value="">Choose a replacement…</option>'+alts.map(function(d){return '<option>'+esc(d.name)+'</option>'}).join('')+'</select>':'')+'</div>'}).join('');
  var add=S.cats.map(function(c){var ds=S.drills.filter(function(d){return d.cat===c});if(!ds.length)return '';return '<details><summary>'+esc(c)+' ('+ds.length+')</summary>'+ds.map(function(d){return '<div class="row"><span class="grow">'+esc(d.name)+' — '+d.mins+' min</span><button class="small primary" onclick="addBlockToPlan(\''+esc(d.name).replace(/'/g,"\\'")+'\')">Add</button></div>'}).join('')+'</details>'}).join('');
- return '<button onclick="editPlanIdx=-1;render()">← Back to your plans</button><div class="card"><label>Title</label><input value="'+esc(p.title)+'" onchange="S.plans[editPlanIdx].title=this.value"><div class="grid"><div><label>Date</label><input type="date" value="'+esc(p.date)+'" onchange="S.plans[editPlanIdx].date=this.value"></div><div><label>Start time</label><input type="time" value="'+esc(p.start)+'" onchange="S.plans[editPlanIdx].start=this.value"></div><div><label>End time</label><input type="time" value="'+esc(p.end)+'" onchange="S.plans[editPlanIdx].end=this.value"></div><div><label>Location</label><input value="'+esc(p.location)+'" onchange="S.plans[editPlanIdx].location=this.value"></div><div><label>Plan color</label><input type="color" value="'+esc(p.color||'#a6192e')+'" onchange="S.plans[editPlanIdx].color=this.value"></div></div><label>Team logo</label><input type="file" accept="image/*" onchange="loadLogo(this)"><label>Team reminders</label><textarea rows="2" onchange="S.plans[editPlanIdx].reminders=this.value">'+esc(p.reminders)+'</textarea><label>Notes</label><textarea rows="2" onchange="S.plans[editPlanIdx].notes=this.value">'+esc(p.notes)+'</textarea>'+templatePicker()+'<div class="row" style="margin-top:.6rem"><button class="primary" onclick="previewPlan(editPlanIdx)">Preview</button><button onclick="downloadPDF(sheetHTML(S.plans[editPlanIdx]))">Download PDF</button></div></div><h3>Blocks — '+planTotal(p)+' min total</h3>'+blocks+'<h3>Add a block from the drill bank</h3>'+add;
+ return '<button class="only-mobile" onclick="editPlanIdx=-1;render()">← Back to plans</button><div class="card"><label>Title</label><input value="'+esc(p.title)+'" onchange="S.plans[editPlanIdx].title=this.value"><div class="grid"><div><label>Date</label><input type="date" value="'+esc(p.date)+'" onchange="S.plans[editPlanIdx].date=this.value"></div><div><label>Start time</label><input type="time" value="'+esc(p.start)+'" onchange="S.plans[editPlanIdx].start=this.value"></div><div><label>End time</label><input type="time" value="'+esc(p.end)+'" onchange="S.plans[editPlanIdx].end=this.value"></div><div><label>Location</label><input value="'+esc(p.location)+'" onchange="S.plans[editPlanIdx].location=this.value"></div><div><label>Plan color</label><input type="color" value="'+esc(p.color||'#a6192e')+'" onchange="S.plans[editPlanIdx].color=this.value"></div></div><label>Team logo</label><input type="file" accept="image/*" onchange="loadLogo(this)"><label>Team reminders</label><textarea rows="2" onchange="S.plans[editPlanIdx].reminders=this.value">'+esc(p.reminders)+'</textarea><label>Notes</label><textarea rows="2" onchange="S.plans[editPlanIdx].notes=this.value">'+esc(p.notes)+'</textarea>'+templatePicker()+'<div class="row" style="margin-top:.6rem"><button class="primary" onclick="previewPlan(editPlanIdx)">Preview</button><button onclick="downloadPDF(sheetHTML(S.plans[editPlanIdx]))">Download PDF</button><button onclick="dupPlan(editPlanIdx)">Duplicate</button><button class="danger" onclick="askConfirm(\'Delete this plan?\',function(){S.plans.splice(editPlanIdx,1);editPlanIdx=-1;render()})">Delete</button></div></div><h3>Blocks — '+planTotal(p)+' min total</h3>'+blocks+'<h3>Add a block from the drill bank</h3>'+add;
 }
 function loadLogo(inp){if(inp.files&&inp.files[0]){var r=new FileReader();r.onload=function(){S.logo=r.result;toast('Logo set for this session')};r.readAsDataURL(inp.files[0])}}
 function adjBlock(bi,d){var b=S.plans[editPlanIdx].blocks[bi];b.mins=Math.max(1,b.mins+d);render()}
@@ -180,11 +208,11 @@ function generatePlan(len){if(!S.genFocus.length){toast('Pick at least one categ
 function buildHTML(){
  var cats=S.cats.map(function(c){var ds=S.drills.filter(function(d){return d.cat===c});if(!ds.length)return '';return '<details><summary>'+esc(c)+' ('+ds.length+')</summary>'+ds.map(function(d){return '<div class="row"><span class="grow">'+esc(d.name)+' — '+d.mins+' min</span><button class="small primary" onclick="S.buildPicks.push(\''+esc(d.name).replace(/'/g,"\\'")+'\');render()">Add</button></div>'}).join('')+'</details>'}).join('');
  var tot=0;var order=S.buildPicks.map(function(n,i){var d=drillByName(n);if(d)tot+=d.mins;return '<div class="row"><span class="grow"><b>'+(i+1)+'.</b> '+esc(n)+(d?' — '+d.mins+' min · '+esc(d.cat):'')+'</span><button class="small" onclick="var t=S.buildPicks['+i+'];S.buildPicks['+i+']=S.buildPicks['+(i-1)+'];S.buildPicks['+(i-1)+']=t;render()">↑</button><button class="small danger" onclick="S.buildPicks.splice('+i+',1);render()">Remove</button></div>'}).join('');
- return '<div class="grid" style="grid-template-columns:1fr"><div class="card"><h2>Build your own</h2><div class="grid"><div><label>Title (optional)</label><input id="bTitle"></div><div><label>Date</label><input id="bDate" type="date" value="'+todayStr()+'"></div><div><label>Start time</label><input id="bStart" type="time" value="15:30"></div><div><label>End time</label><input id="bEnd" type="time" value="17:00"></div><div><label>Location</label><input id="bLoc"></div></div><h3>Pick drills — they run in pick order</h3>'+cats+'</div><div class="card"><h3>Running order — '+S.buildPicks.length+' drills · '+tot+' min</h3>'+(order||'<p>No drills picked yet.</p>')+'<button class="primary" onclick="saveBuilt()">Save as plan</button></div></div>';
+ return '<div class="grid" style="grid-template-columns:1fr"><div class="card"><h2>Build your own plan</h2><div class="grid"><div><label>Title (optional)</label><input id="bTitle"></div><div><label>Date</label><input id="bDate" type="date" value="'+todayStr()+'"></div><div><label>Start time</label><input id="bStart" type="time" value="15:30"></div><div><label>End time</label><input id="bEnd" type="time" value="17:00"></div><div><label>Location</label><input id="bLoc"></div></div><h3>Pick drills — they run in pick order</h3>'+cats+'</div><div class="card"><h3>Running order — '+S.buildPicks.length+' drills · '+tot+' min</h3>'+(order||'<p>No drills picked yet.</p>')+'<button class="primary" onclick="saveBuilt()">Save as plan</button></div></div>';
 }
 function saveBuilt(){if(!S.buildPicks.length){toast('Pick at least one drill');return}var blocks=S.buildPicks.map(function(n){var d=drillByName(n);return{name:d.name,cat:d.cat,mins:d.mins}});S.plans.push({title:document.getElementById('bTitle').value||'',date:document.getElementById('bDate').value,start:document.getElementById('bStart').value,end:document.getElementById('bEnd').value,location:document.getElementById('bLoc').value,blocks:blocks,reminders:'',notes:'',color:S.teamColor,focus:[]});S.buildPicks=[];S.sub='your';editPlanIdx=S.plans.length-1;render();toast('Plan saved')}
 /* ----- Monthly breakdown ----- */
-function breakdownHTML(){var months={};S.plans.forEach(function(p){if(p.date)months[p.date.slice(0,7)]=1});var opts=Object.keys(months).sort();var cur=opts.length?opts[opts.length-1]:todayStr().slice(0,7);return '<div class="card"><h2>Monthly breakdown</h2><div class="row"><label style="margin:0">Month</label><input type="month" id="bdMonth" value="'+cur+'" style="width:auto" onchange="calcBreakdown()"><select id="bdMode" style="width:auto" onchange="calcBreakdown()"><option value="drills">By drills run</option><option value="mins">By minutes</option></select><button onclick="calcBreakdown()">Refresh now</button></div><div id="bdOut"></div><p class="sub" id="bdStamp"></p></div>'}
+function breakdownHTML(){var months={};S.plans.forEach(function(p){if(p.date)months[p.date.slice(0,7)]=1});var opts=Object.keys(months).sort();var cur=opts.length?opts[opts.length-1]:todayStr().slice(0,7);return '<div class="card"><h2>Drills practiced, month by month</h2><div class="row"><label style="margin:0">Month</label><input type="month" id="bdMonth" value="'+cur+'" style="width:auto" onchange="calcBreakdown()"><select id="bdMode" style="width:auto" onchange="calcBreakdown()"><option value="drills">By drills run</option><option value="mins">By minutes</option></select><button onclick="calcBreakdown()">Refresh now</button></div><div id="bdOut"></div><p class="sub" id="bdStamp"></p></div>'}
 function calcBreakdown(){var out=document.getElementById('bdOut');if(!out)return;var m=document.getElementById('bdMonth').value,mode=document.getElementById('bdMode').value;var byCat={},byDrill={},total=0;S.plans.forEach(function(p){if(!p.date||p.date.slice(0,7)!==m)return;p.blocks.forEach(function(b){var v=mode==='mins'?b.mins:1;byCat[b.cat]=(byCat[b.cat]||0)+v;byDrill[b.name]=(byDrill[b.name]||0)+v;total+=v})});S.lastCalc=new Date().toLocaleString();document.getElementById('bdStamp').textContent='Last calculated: '+S.lastCalc;
  if(!total){out.innerHTML='<p>No dated plans in this month yet — generate or build a plan with a date in this month and it will be counted here.</p>';return}
  var cols=['#a6192e','#c8a24a','#2456a6','#1e7a3c','#7a4a9e','#c2611a','#2a7a8c','#8c2a4a'];var acc=0,cx=100,cy=100,r=88,paths='';var keys=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a]});
@@ -198,7 +226,7 @@ function calcBreakdown(){var out=document.getElementById('bdOut');if(!out)return
 var drillFilter={q:'',cat:'all'},editDrillId=-1;
 function renderDrills(){
  var list=S.drills.filter(function(d){return (drillFilter.cat==='all'||d.cat===drillFilter.cat)&&(!drillFilter.q||d.name.toLowerCase().indexOf(drillFilter.q)>=0)});
- var h='<h2>Drill Bank</h2><div class="row"><input class="grow" placeholder="Search drills…" value="'+esc(drillFilter.q)+'" oninput="drillFilter.q=this.value.toLowerCase();renderDrillsSoft()"><select style="width:auto" onchange="drillFilter.cat=this.value;render()"><option value="all">All categories</option>'+S.cats.map(function(c){return '<option'+(drillFilter.cat===c?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></div><div id="drillList">'+drillListHTML(list)+'</div>';
+ var h='<h2>Drill bank</h2><div class="row"><input class="grow" placeholder="Search drills…" value="'+esc(drillFilter.q)+'" oninput="drillFilter.q=this.value.toLowerCase();renderDrillsSoft()"><select style="width:auto" onchange="drillFilter.cat=this.value;render()"><option value="all">All categories</option>'+S.cats.map(function(c){return '<option'+(drillFilter.cat===c?' selected':'')+'>'+esc(c)+'</option>'}).join('')+'</select></div><div id="drillList">'+drillListHTML(list)+'</div>';
  h+='<div class="card"><h3>'+(editDrillId>=0?'Edit drill':'Add a drill')+'</h3><div class="grid"><div><label>Name</label><input id="dName"></div><div><label>Category</label><select id="dCat">'+S.cats.map(function(c){return '<option>'+esc(c)+'</option>'}).join('')+'</select></div><div><label>Default length (min, 1-min steps)</label><input id="dMins" type="number" step="1" value="10"></div><div><label>Equipment</label><input id="dEquip"></div><div><label>Setup</label><input id="dSetup"></div><div><label>Players</label><input id="dPlayers"></div></div><label>Offensive coaching points</label><textarea id="dOff" rows="2"></textarea><label>Defensive coaching points</label><textarea id="dDef" rows="2"></textarea><label>Video example</label><input id="dVideo" type="file" accept="video/*"><div class="row" style="margin-top:.6rem"><button class="primary" onclick="saveDrill()">'+(editDrillId>=0?'Save changes':'Add drill')+'</button>'+(editDrillId>=0?'<button onclick="editDrillId=-1;render()">Cancel edit</button>':'')+'</div></div>';
  h+='<div class="card"><h3>Categories</h3><div class="row"><input class="grow" id="newCat" placeholder="New category name"><button class="primary" onclick="addCat()">Add category</button></div>'+S.cats.map(function(c,i){if(renameCatIdx===i)return '<div class="row"><input class="grow" id="renameCatInput" value="'+esc(c)+'"><button class="small primary" onclick="saveRenameCat('+i+')">Save name</button><button class="small" onclick="renameCatIdx=-1;render()">Cancel</button></div>';return '<div class="row"><span class="grow">'+esc(c)+'</span><button class="small" onclick="renameCat('+i+')">Rename</button><button class="small danger" onclick="deleteCat('+i+')">Delete</button></div>'}).join('')+'</div>';
  app.innerHTML=h;
@@ -216,7 +244,7 @@ function deleteCat(i){var c=S.cats[i];if(S.drills.some(function(d){return d.cat=
 /* ---------- ROSTER ---------- */
 var rosterTab='current',editPlayerId=-1,rosterQ='',rosterPos='all',rosterTeam='all',rosterSort='name';
 function renderRoster(){
- var h='<h2>Roster</h2><div class="subtabs"><button class="'+(rosterTab==='current'?'active':'')+'" onclick="rosterTab=\'current\';render()">Current roster ('+S.roster.length+')</button><button class="'+(rosterTab==='former'?'active':'')+'" onclick="rosterTab=\'former\';render()">Former cadets ('+S.former.length+')</button></div>';
+ var h='<h2>Team roster</h2><div class="subtabs"><button class="'+(rosterTab==='current'?'active':'')+'" onclick="rosterTab=\'current\';render()">Current roster ('+S.roster.length+')</button><button class="'+(rosterTab==='former'?'active':'')+'" onclick="rosterTab=\'former\';render()">Former cadets ('+S.former.length+')</button></div>';
  if(rosterTab==='former'){h+=S.former.length?'<div style="overflow-x:auto"><table class="rtable"><tr><th>Player</th><th>Class</th><th>Position</th><th>Jersey</th><th>Team</th><th>Club</th><th>College</th><th>Moved</th><th></th></tr>'+S.former.slice().sort(function(a,b){return a.year-b.year}).map(function(p){return '<tr><td><b>'+esc(fullName(p))+'</b></td><td>'+p.year+'</td><td>'+esc(p.pos)+'</td><td>'+(p.jersey?'#'+esc(p.jersey):'')+'</td><td>'+esc(p.team)+'</td><td>'+esc(p.club)+'</td><td>'+(p.college?'<span class="committed">'+esc(p.college)+'</span>':'')+'</td><td>'+esc(p.moved)+'</td><td><div class="row"><button class="small" onclick="moveBack('+p.id+')">Move back</button><button class="small danger" onclick="askConfirm(\'Delete permanently?\',function(){S.former=S.former.filter(function(x){return x.id!=='+p.id+'});render()})">Delete</button></div></td></tr>'}).join('')+'</table></div>':'<div class="card">No former cadets yet.</div>';app.innerHTML=h;return}
  var list=S.roster.filter(function(p){return (!rosterQ||fullName(p).toLowerCase().indexOf(rosterQ)>=0)&&(rosterPos==='all'||p.pos===rosterPos)&&(rosterTeam==='all'||(p.team||'Varsity')===rosterTeam)});
  list.sort(function(a,b){if(rosterSort==='year')return a.year-b.year||a.last.localeCompare(b.last);if(rosterSort==='jersey')return (+a.jersey||999)-(+b.jersey||999);if(rosterSort==='team')return (a.team||'').localeCompare(b.team||'');return a.last.localeCompare(b.last)});
@@ -235,7 +263,7 @@ function moveBack(pid){var p=S.former.filter(function(x){return x.id===pid})[0];
 /* ---------- DEPTH CHART ---------- */
 function renderDepth(){
  var positions=Object.keys(S.depth);
- var h='<h2>Depth Chart</h2><p class="sub">Starters first, then backups, in order. Players must be on the roster first.</p><div class="row"><button class="primary" onclick="previewDepth()">Preview chart</button><button onclick="downloadPDF(depthSheetHTML(),\'depth-chart.pdf\')">Download PDF</button></div>';
+ var h='<h2>Depth chart</h2><p class="sub">Starters first, then backups, in order. Players must be on the roster first.</p><div class="row"><button class="primary" onclick="previewDepth()">Preview chart</button><button onclick="downloadPDF(depthSheetHTML(),\'depth-chart.pdf\')">Download PDF</button></div>';
  positions.forEach(function(pos){h+='<div class="card"><h3>'+esc(pos)+'</h3>'+S.depth[pos].map(function(n,i){return '<div class="row"><span class="grow"><b>'+(i+1)+'.</b> '+esc(n)+(i===0?' <span class="pill">Starter</span>':'')+'</span><button class="small" onclick="depthMove(\''+pos+'\','+i+',-1)">↑</button><button class="small" onclick="depthMove(\''+pos+'\','+i+',1)">↓</button><button class="small danger" onclick="S.depth[\''+pos+'\'].splice('+i+',1);render()">Remove</button></div>'}).join('')+'<div class="row"><select id="add-'+pos+'" class="grow">'+S.roster.filter(function(p){return S.depth[pos].indexOf(fullName(p))<0}).map(function(p){return '<option>'+esc(fullName(p))+'</option>'}).join('')+'</select><button class="small primary" onclick="depthAdd(\''+pos+'\')">Add player</button></div></div>'});
  h+='<div class="card"><h3>Add a position group</h3><div class="row"><input class="grow" id="newPos" placeholder="e.g. Face-Off"><button class="primary" onclick="var v=document.getElementById(\'newPos\').value.trim();if(v&&!S.depth[v]){S.depth[v]=[];render()}">Add group</button></div></div>';
  app.innerHTML=h;
@@ -277,7 +305,7 @@ function rankSort(by){var b=S.rankings[S.rankClass];var rec=function(n){return S
 /* ---------- STAT TRACKING ---------- */
 var curSession=-1;
 function renderStats(){
- var h='<h2>Stat Tracking</h2>';
+ var h='<h2>Stat tracking</h2>';
  if(curSession<0||!S.sessions[curSession]){h+='<div class="card"><h3>New stat session</h3><div class="grid"><div><label>Type</label><select id="sType"><option>Practice</option><option>Game</option></select></div><div><label>Title</label><input id="sTitle" placeholder="e.g. Practice — Nov 16"></div><div><label>Date</label><input id="sDate" type="date" value="'+todayStr()+'"></div><div><label>Opponent / location</label><input id="sOpp"></div></div><label>Notes</label><textarea id="sNotes" rows="2"></textarea><div style="margin-top:.6rem"><button class="primary" onclick="createSession()">Create session from roster template</button></div></div>';
   h+=S.sessions.map(function(s,i){return '<div class="card"><h3>'+esc(s.title||s.type)+'</h3><p>'+esc(s.type)+' · '+esc(s.date)+' · '+esc(s.opp)+'</p><div class="row"><button class="primary" onclick="curSession='+i+';render()">Open sheet</button><button class="danger" onclick="askConfirm(\'Delete this session?\',function(){S.sessions.splice('+i+',1);render()})">Delete</button></div></div>'}).join('')||'<div class="card">No stat sessions yet.</div>';
   h+=seasonHTML();app.innerHTML=h;return}
@@ -303,7 +331,7 @@ function monthEvents(y,m){var evs=[];S.plans.forEach(function(p,i){if(!p.date)re
 function renderCalendar(){
  var cur=S.calCursor,y=cur.getFullYear(),m=cur.getMonth();var names=['January','February','March','April','May','June','July','August','September','October','November','December'];
  var evs=monthEvents(y,m);var counts={practice:0,lift:0,game:0,other:0};evs.forEach(function(e){counts[e.type==='practice'?'practice':e.type]++});
- var h='<h2>Master Calendar</h2><div class="row"><button onclick="S.calCursor=new Date('+y+','+(m-1)+',1);render()">← Prev</button><b class="grow" style="text-align:center;font-size:1.15rem">'+names[m]+' '+y+'</b><button onclick="S.calCursor=new Date('+y+','+(m+1)+',1);render()">Next →</button></div><p class="sub">This month: '+counts.practice+' practices · '+counts.lift+' lifts · '+counts.game+' games · '+counts.other+' other</p><div class="row"><select style="width:auto" onchange="S.calFilter=this.value;render()"><option value="all">All types</option><option value="practice"'+(S.calFilter==='practice'?' selected':'')+'>Practice</option><option value="lift"'+(S.calFilter==='lift'?' selected':'')+'>Lift</option><option value="game"'+(S.calFilter==='game'?' selected':'')+'>Game</option><option value="other"'+(S.calFilter==='other'?' selected':'')+'>Other</option></select><button class="'+(S.calView==='grid'?'primary':'')+'" onclick="S.calView=\'grid\';render()">Month grid</button><button class="'+(S.calView==='list'?'primary':'')+'" onclick="S.calView=\'list\';render()">List / upcoming</button></div>';
+ var h='<h2>Master calendar</h2><div class="row"><button onclick="S.calCursor=new Date('+y+','+(m-1)+',1);render()">← Prev</button><b class="grow" style="text-align:center;font-size:1.15rem">'+names[m]+' '+y+'</b><button onclick="S.calCursor=new Date('+y+','+(m+1)+',1);render()">Next →</button></div><p class="sub">This month: '+counts.practice+' practices · '+counts.lift+' lifts · '+counts.game+' games · '+counts.other+' other</p><div class="row"><select style="width:auto" onchange="S.calFilter=this.value;render()"><option value="all">All types</option><option value="practice"'+(S.calFilter==='practice'?' selected':'')+'>Practice</option><option value="lift"'+(S.calFilter==='lift'?' selected':'')+'>Lift</option><option value="game"'+(S.calFilter==='game'?' selected':'')+'>Game</option><option value="other"'+(S.calFilter==='other'?' selected':'')+'>Other</option></select><button class="'+(S.calView==='grid'?'primary':'')+'" onclick="S.calView=\'grid\';render()">Month grid</button><button class="'+(S.calView==='list'?'primary':'')+'" onclick="S.calView=\'list\';render()">List / upcoming</button></div>';
  var fevs=evs.filter(function(e){return S.calFilter==='all'||e.type===S.calFilter});
  if(S.calView==='grid'){var first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();h+='<div class="cal">'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(function(d){return '<div style="font-weight:700;text-align:center">'+d+'</div>'}).join('');for(var i=0;i<first;i++)h+='<div class="day dim"></div>';for(var d=1;d<=days;d++){var ds=y+'-'+('0'+(m+1)).slice(-2)+'-'+('0'+d).slice(-2);var de=fevs.filter(function(e){return e.date===ds});h+='<div class="day" onclick="calDay=\''+ds+'\';render()"><b>'+d+'</b>'+de.map(function(e){return '<div class="ev '+e.type+'">'+esc(e.time?fmtTime(parseTime(e.time))+' ':'')+esc(e.label)+'</div>'}).join('')+'</div>'}h+='</div>'}
  else{h+='<div class="card">'+(fevs.length?fevs.sort(function(a,b){return a.date.localeCompare(b.date)}).map(function(e){return '<div class="row"><span class="grow"><span class="pill">'+e.date+'</span> <b>'+esc(e.label)+'</b> ('+e.type+')'+(e.time?' · '+fmtTime(parseTime(e.time)):'')+'</span>'+(e.plan!==undefined?'<button class="small primary" onclick="openPlanViewer('+e.plan+')">Open plan</button>':'<button class="small" onclick="editEvIdx='+e.idx+';render()">Edit</button>')+'</div>'}).join(''):'<p>No events match this month.</p>')+'</div>'}
