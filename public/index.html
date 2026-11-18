@@ -664,11 +664,11 @@ function recDetectDelim(lines){for(var i=0;i<lines.length;i++){var l=lines[i];if
 function recParseTable(text){
  var lines=String(text||'').replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
  var delim=recDetectDelim(lines);
- var hdrIdx=-1,map=null;
- for(var i=0;i<lines.length;i++){if(!lines[i].trim())continue;var cells=recSplitLine(lines[i],delim);var m={},found=0;cells.forEach(function(c,idx){var k=recColKey(c);if(k&&!(k in m)){m[k]=idx;found++}});if(found>=2&&(m.name!==undefined||m.year!==undefined)){hdrIdx=i;map=m;break}}
- if(hdrIdx<0||!map)return {header:false,rows:[]};
+ var hdrIdx=-1,map=null,hdrCells=0,maxCells=0;
+ for(var i=0;i<lines.length;i++){if(!lines[i].trim())continue;var cells=recSplitLine(lines[i],delim);var m={},found=0;cells.forEach(function(c,idx){var k=recColKey(c);if(k&&!(k in m)){m[k]=idx;found++}});if(found>=2&&(m.name!==undefined||m.year!==undefined)){hdrIdx=i;map=m;hdrCells=cells.length;break}}
+ if(hdrIdx<0||!map)return {header:false,rows:[],map:null,hdrCells:0,maxCells:0};
  var rows=[];
- for(var j=hdrIdx+1;j<lines.length;j++){var ln=lines[j];if(!ln.trim())continue;var c=recSplitLine(ln,delim);var get=function(k){return (map[k]!==undefined&&c[map[k]]!==undefined)?c[map[k]]:''};
+ for(var j=hdrIdx+1;j<lines.length;j++){var ln=lines[j];if(!ln.trim())continue;var c=recSplitLine(ln,delim);if(c.length>maxCells)maxCells=c.length;var get=function(k){return (map[k]!==undefined&&c[map[k]]!==undefined)?c[map[k]]:''};
   var sdVal=recNormDate(get('shadowDay'));
   var shadowDay=recParseYesNo(get('shadowDay'))||!!sdVal;
   var shadowDate=sdVal||recNormDate(get('shadowDate'));
@@ -676,7 +676,7 @@ function recParseTable(text){
   var probs=[];if(!r.name)probs.push('Missing name');if(!r.year)probs.push('Missing grad year');
   rows.push({rec:r,problems:probs});
  }
- return {header:true,rows:rows};
+ return {header:true,rows:rows,map:map,hdrCells:hdrCells,maxCells:maxCells};
 }
 function recClassify(parsed){
  var seen={};S.recruits.forEach(function(r){seen[(r.name||'').toLowerCase().trim()+'|'+r.year]=1});
@@ -692,9 +692,9 @@ function recClassify(parsed){
 function recImportFile(el){var f=el.files&&el.files[0];el.value='';if(!f)return;var name=(f.name||'').toLowerCase();if(/\.pdf$/.test(name)){recImportPDF(f)}else{var rd=new FileReader();rd.onload=function(){recImportText(String(rd.result||''),'file')};rd.onerror=function(){recImportError('Could not read that file. Try again, or export the list as a CSV.')};rd.readAsText(f)}}
 function recImportText(text,src){var parsed=recParseTable(text);if(!parsed.header||!parsed.rows.length){recImportError('No recruits found in that '+(src==='PDF'?'PDF':'file')+'. Make sure the first row lists the columns (Full name, Position, Grad year, …) with one recruit per line. If the list is a PDF with no selectable text, export it as a CSV instead.');return}var c=recClassify(parsed);recImportPending=c;recImportPreview(c)}
 function recImportPreview(c){
- var rowHtml=function(r,st){return '<tr><td>'+esc(r.name||'—')+'</td><td>'+esc(r.pos||'')+'</td><td>'+(r.year||'')+'</td><td>'+esc(r.school||'')+'</td><td>'+esc(r.club||'')+'</td><td>'+esc([r.email,r.phone].filter(function(x){return x}).join(' · ')||'')+'</td><td>'+st+'</td></tr>'};
+ var rowHtml=function(r,st){var sh=r.shadowDay?(r.shadowDate?('Shadow Day · '+fmtDateLong(r.shadowDate)):'Shadow day set'):'';var st2=r.stars?('★'.repeat(r.stars)+'☆'.repeat(5-r.stars)+' ('+r.stars+' of 5)'):'Not rated';return '<tr><td>'+esc(r.name||'—')+'</td><td>'+esc(r.pos||'')+'</td><td>'+(r.year||'')+'</td><td>'+esc(r.school||'')+'</td><td>'+esc(r.club||'')+'</td><td>'+esc([r.email,r.phone].filter(function(x){return x}).join(' · ')||'')+'</td><td>'+esc(sh)+'</td><td>'+st2+'</td><td>'+st+'</td></tr>'};
  var h='<h3>Review import</h3><p class="pagesub">'+c.ok.length+' new recruit'+(c.ok.length===1?'':'s')+' will be added'+(c.skipped.length?' · '+c.skipped.length+' skipped':'')+'.</p>';
- h+='<div style="overflow-x:auto;max-height:22rem;overflow-y:auto"><table class="bdtable" style="min-width:36rem"><tr><th>Name</th><th>Position</th><th>Class</th><th>School</th><th>Club</th><th>Parent contact</th><th>Status</th></tr>';
+ h+='<div style="overflow-x:auto;max-height:22rem;overflow-y:auto"><table class="bdtable" style="min-width:46rem"><tr><th>Name</th><th>Position</th><th>Class</th><th>School</th><th>Club</th><th>Parent contact</th><th>Shadow day</th><th>Stars</th><th>Status</th></tr>';
  h+=c.ok.map(function(r){return rowHtml(r,'<span style="color:var(--green)">Add</span>')}).join('');
  h+=c.skipped.map(function(s){return rowHtml(s.rec,'<span style="color:var(--red)">Skipped — '+esc(s.reason)+'</span>')}).join('');
  h+='</table></div>';
@@ -707,7 +707,165 @@ function recImportTemplate(){var lines=['Full name,Position,Grad year,Middle sch
 function recImportError(msg){recImportPending=null;openModal('<h3>Could not import</h3><p>'+esc(msg)+'</p><div class="row"><button class="primary" onclick="recImportTemplate()">Download CSV template</button></div>')}
 function recLoadPdfJs(ok,err){if(window.pdfjsLib){ok();return}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=function(){try{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';ok()}catch(e){err()}};s.onerror=function(){err()};document.head.appendChild(s)}
 function recPdfPageLines(tc){var items=(tc.items||[]).filter(function(it){return it.str&&it.str.trim()});items.sort(function(a,b){var dy=(b.transform[5]||0)-(a.transform[5]||0);if(Math.abs(dy)>3)return dy;return (a.transform[4]||0)-(b.transform[4]||0)});var lines=[],cur=null;items.forEach(function(it){var y=it.transform[5]||0,x=it.transform[4]||0;if(!cur||Math.abs(y-cur.y)>3){cur={y:y,parts:[{x:x,s:it.str}]};lines.push(cur)}else cur.parts.push({x:x,s:it.str})});return lines.map(function(l){l.parts.sort(function(a,b){return a.x-b.x});return l.parts.map(function(p){return p.s}).join('\t')}).join('\n')}
-function recImportPDF(f){toast('Reading PDF…');recLoadPdfJs(function(){var rd=new FileReader();rd.onload=function(){try{window.pdfjsLib.getDocument({data:new Uint8Array(rd.result)}).promise.then(function(pdf){var jobs=[];for(var p=1;p<=pdf.numPages;p++){jobs.push(pdf.getPage(p).then(function(page){return page.getTextContent().then(recPdfPageLines)}))}Promise.all(jobs).then(function(pages){recImportText(pages.join('\n'),'PDF')}).catch(function(){recImportError('Could not read the text in that PDF. If it is a scanned image, export the list as a CSV instead.')})}).catch(function(){recImportError('That file could not be opened as a PDF. Try exporting the list as a CSV instead.')})}catch(e){recImportError('Could not read that PDF. Try exporting the list as a CSV instead.')}};rd.onerror=function(){recImportError('Could not read that file. Try again, or export the list as a CSV.')};rd.readAsArrayBuffer(f)},function(){recImportError('Could not load the PDF reader — check your internet connection and try again, or export the list as a CSV instead.')})}
+function recImportPDF(f){toast('Reading PDF…');recLoadPdfJs(function(){var rd=new FileReader();rd.onload=function(){try{window.pdfjsLib.getDocument({data:new Uint8Array(rd.result)}).promise.then(function(pdf){var jobs=[];for(var p=1;p<=pdf.numPages;p++){jobs.push(pdf.getPage(p).then(function(page){return page.getTextContent().then(recPdfPageLines)}))}Promise.all(jobs).then(function(pages){recImportPdfText(pages.join('\n'),rd.result)}).catch(function(){recImportError('Could not read the text in that PDF. If it is a scanned image, export the list as a CSV instead.')})}).catch(function(){recImportError('That file could not be opened as a PDF. Try exporting the list as a CSV instead.')})}catch(e){recImportError('Could not read that PDF. Try exporting the list as a CSV instead.')}};rd.onerror=function(){recImportError('Could not read that file. Try again, or export the list as a CSV.')};rd.readAsArrayBuffer(f)},function(){recImportError('Could not load the PDF reader — check your internet connection and try again, or export the list as a CSV instead.')})}
+/* PDF text can be clipped by pdf.js when a line runs past the page edge
+   (pdf.js only returns text inside the page box). If the pdf.js parse looks
+   clipped, re-read the raw content streams — which still hold the full text —
+   and use whichever parse maps more columns. */
+function recPdfLooksClipped(p){
+ if(!p.header||!p.map)return false;
+ var mapped=Object.keys(p.map).length;
+ if(p.hdrCells>mapped)return true; /* a header cell matched no known column, e.g. "Shad" */
+ if(p.maxCells>p.hdrCells)return true; /* a data row is wider than the header */
+ return false;
+}
+function recPdfParseBetter(a,b){
+ var am=Object.keys(a.map||{}).length,bm=Object.keys(b.map||{}).length;
+ if(am!==bm)return am>bm;
+ function filled(p){var n=0;p.rows.forEach(function(r){if(r.rec.shadowDate)n++;if(r.rec.stars)n++});return n}
+ return filled(a)>filled(b);
+}
+function recImportPdfText(pdfText,buf){
+ var parsed=recParseTable(pdfText);
+ if(!recPdfLooksClipped(parsed)){recImportText(pdfText,'PDF');return}
+ recPdfRawText(buf).then(function(raw){
+  var alt=recParseTable(raw);
+  if(alt.header&&recPdfParseBetter(alt,parsed))recImportText(raw,'PDF');
+  else recImportText(pdfText,'PDF');
+ }).catch(function(){recImportText(pdfText,'PDF')});
+}
+function recPdfStrBytes(s){
+ if(s.length>=2&&s.charCodeAt(0)===0xFE&&s.charCodeAt(1)===0xFF){var o='';for(var i=2;i+1<s.length;i+=2)o+=String.fromCharCode((s.charCodeAt(i)<<8)|s.charCodeAt(i+1));return o}
+ return s;
+}
+function recPdfContentLines(src){
+ var lines=[],cur='',curX=null,curY=null,stack=[];
+ function endLine(){if(cur)lines.push(cur);cur=''}
+ function isWS(c){return c===' '||c==='\t'||c==='\r'||c==='\n'||c==='\f'||c==='\0'}
+ function isDelim(c){return isWS(c)||'()<>[]{}/%'.indexOf(c)>=0}
+ function readLiteral(i){
+  var s='';i++;
+  while(i<src.length){
+   var ch=src.charAt(i);
+   if(ch==='\\'){
+    i++;if(i>=src.length)break;var e=src.charAt(i);
+    if(e==='n')s+='\n';else if(e==='r')s+='\r';else if(e==='t')s+='\t';else if(e==='b')s+='\b';else if(e==='f')s+='\f';
+    else if(e==='(')s+='(';else if(e===')')s+=')';else if(e==='\\')s+='\\';
+    else if(e>='0'&&e<='7'){var o=e;i++;var k=0;while(k<2&&i<src.length&&src.charAt(i)>='0'&&src.charAt(i)<='7'){o+=src.charAt(i);i++;k++}s+=String.fromCharCode(parseInt(o,8)&0xFF);i--}
+    else if(e==='\r'){if(src.charAt(i+1)==='\n')i++}
+    else if(e==='\n'){}
+    else s+=e;
+    i++;continue;
+   }
+   if(ch==='('){var d=1;s+=ch;i++;while(i<src.length&&d>0){var c2=src.charAt(i);if(c2==='\\'){s+=c2;i++;if(i<src.length){s+=src.charAt(i);i++}continue}if(c2==='(')d++;if(c2===')')d--;s+=c2;i++}continue}
+   if(ch===')'){i++;break}
+   s+=ch;i++;
+  }
+  return {v:recPdfStrBytes(s),i:i};
+ }
+ function readHex(i){
+  i++;var h='';
+  while(i<src.length&&src.charAt(i)!=='>'){var hc=src.charAt(i);if(!isWS(hc))h+=hc;i++}
+  if(i<src.length)i++;
+  if(h.length%2)h+='0';
+  var s='';for(var k=0;k<h.length;k+=2)s+=String.fromCharCode(parseInt(h.substr(k,2),16));
+  return {v:recPdfStrBytes(s),i:i};
+ }
+ function readString(i){if(src.charAt(i)==='(')return readLiteral(i);return readHex(i)}
+ var i=0,n=src.length;
+ while(i<n){
+  var c=src.charAt(i);
+  if(isWS(c)){i++;continue}
+  if(c==='%'){while(i<n&&src.charAt(i)!=='\n'&&src.charAt(i)!=='\r')i++;continue}
+  if(c==='('||c==='<'){
+   if(c==='<'&&src.charAt(i+1)==='<'){
+    var d=0;while(i<n){if(src.charAt(i)==='<'&&src.charAt(i+1)==='<'){d++;i+=2;continue}if(src.charAt(i)==='>'&&src.charAt(i+1)==='>'){d--;i+=2;if(!d)break;continue}i++}
+    stack.push({});continue;
+   }
+   var r=readString(i);i=r.i;stack.push({str:r.v});continue;
+  }
+  if(c==='['){
+   i++;var arr=[];
+   while(i<n){
+    while(i<n&&isWS(src.charAt(i)))i++;
+    if(i>=n)break;
+    var cc=src.charAt(i);
+    if(cc===']'){i++;break}
+    if(cc==='('||cc==='<'){var r2=readString(i);i=r2.i;arr.push({str:r2.v});continue}
+    var mn=/^[+-]?(\d+\.?\d*|\.\d+)/.exec(src.slice(i));
+    if(mn){arr.push({num:parseFloat(mn[0])});i+=mn[0].length;continue}
+    i++;
+   }
+   stack.push({arr:arr});continue;
+  }
+  if(c==='/'){i++;while(i<n&&!isDelim(src.charAt(i)))i++;stack.push({});continue}
+  if(c===']'||c==='}'){i++;continue}
+  var mn2=/^[+-]?(\d+\.?\d*|\.\d+)/.exec(src.slice(i));
+  if(mn2){stack.push({num:parseFloat(mn2[0])});i+=mn2[0].length;continue}
+  if(c==="'"||c==='"'){
+   i++;var st=stack.length?stack[stack.length-1]:null;stack=[];
+   endLine();curY=null;curX=null;
+   if(st&&st.str!==undefined)cur+=st.str;
+   continue;
+  }
+  var mw=/^[A-Za-z][A-Za-z0-9]*\*?/.exec(src.slice(i));
+  if(mw){
+   var w=mw[0];i+=w.length;
+   if(w==='Tj'){var t=stack.length?stack[stack.length-1]:null;stack=[];if(t&&t.str!==undefined)cur+=t.str}
+   else if(w==='TJ'){var a=stack.length?stack[stack.length-1]:null;stack=[];if(a&&a.arr)a.arr.forEach(function(el){if(el.str!==undefined)cur+=el.str})}
+   else if(w==='Td'||w==='TD'){
+    var ty=stack.length?stack[stack.length-1].num||0:0,tx=stack.length>1?stack[stack.length-2].num||0:0;
+    stack=[];
+    if(ty){endLine();curY=(curY===null?0:curY)+ty;curX=(curX===null?0:curX)+tx}
+    else if(tx&&cur){cur+='\t';curX=(curX===null?0:curX)+tx}
+   }
+   else if(w==='Tm'){
+    var nums=stack.filter(function(o){return o.num!==undefined}).map(function(o){return o.num});
+    stack=[];
+    if(nums.length>=6){
+     var nx=nums[4],ny=nums[5];
+     if(curY!==null&&Math.abs(ny-curY)>0.5){endLine();curX=nx;curY=ny}
+     else if(curY!==null&&cur&&Math.abs(nx-(curX||0))>0.5){cur+='\t';curX=nx}
+     else{curX=nx;curY=ny}
+    }
+   }
+   else if(w==='T*'){stack=[];endLine();curY=null;curX=null}
+   else stack=[];
+   continue;
+  }
+  i++;
+ }
+ if(cur)lines.push(cur);
+ return lines.join('\n');
+}
+function recPdfRawText(buf){
+ return (async function(){
+  var bytes=new Uint8Array(buf),txt='',i;
+  for(i=0;i<bytes.length;i++)txt+=String.fromCharCode(bytes[i]);
+  var out=[],pos=0;
+  while(true){
+   var si=txt.indexOf('stream',pos);if(si<0)break;
+   if(si>=3&&txt.slice(si-3,si)==='end'){pos=si+6;continue}
+   var after=si+6,nl=0;
+   if(txt.charAt(after)==='\r'&&txt.charAt(after+1)==='\n')nl=2;
+   else if(txt.charAt(after)==='\n'||txt.charAt(after)==='\r')nl=1;
+   else{pos=si+6;continue}
+   var start=after+nl,ei=txt.indexOf('endstream',start);if(ei<0)break;
+   var end=ei;while(end>start&&(txt.charAt(end-1)==='\r'||txt.charAt(end-1)==='\n'))end--;
+   var dict=txt.slice(Math.max(0,si-600),si);
+   var chunk=txt.slice(start,end);
+   if(/\/FlateDecode/.test(dict)){
+    try{
+     var stream=new Blob([bytes.slice(start,end)]).stream().pipeThrough(new DecompressionStream('deflate'));
+     chunk=await new Response(stream).text();
+    }catch(e){chunk=''}
+   }
+   if(chunk.indexOf('BT')>=0||chunk.indexOf('Tj')>=0||chunk.indexOf('TJ')>=0)out.push(chunk);
+   pos=ei+9;
+  }
+  return recPdfContentLines(out.join('\n'));
+ })();
+}
 function rankHTML(){
  var years=[];for(var y=2031;y<=2040;y++)years.push(y);
  var h='<div class="subtabs">'+years.map(function(y){var n=S.recruits.filter(function(r){return r.year===y}).length;return '<button class="'+(S.rankClass===y?'active':'')+'" onclick="S.rankClass='+y+';render()">'+y+(n?' ('+n+')':'')+'</button>'}).join('')+'</div><div class="row"><button onclick="S.rankClass=Math.max(2031,S.rankClass-1);render()">← Previous class</button><button onclick="S.rankClass=Math.min(2040,S.rankClass+1);render()">Next class →</button></div>';
