@@ -708,7 +708,7 @@ function renderCalendar(){
   var past=sorted.filter(function(e){return e.date<todayStr2});
   if(past.length){h+='<details style="margin-top:1.5rem"><summary style="cursor:pointer;font-size:.875rem;font-weight:600;color:var(--mut)">Past events ('+past.length+')</summary><div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem">'+past.slice().reverse().map(evCardHTML).join('')+'</div></details>'}
  }
- if(calDay){var de2=evs.filter(function(e){return e.date===calDay});
+ if(calDay){var de2=fevs.filter(function(e){return e.date===calDay});
   h+='<div style="margin-top:1.5rem"><div class="row" style="justify-content:space-between;align-items:center"><h3 style="margin:0">'+fmtDateLong(calDay)+(calDay===todayStr2?' <span style="margin-left:.5rem;font-size:.875rem;font-weight:600;text-transform:none;letter-spacing:normal;color:var(--red)">Today</span>':'')+'</h3><button class="small" onclick="editEvIdx=-1;render();document.getElementById(\'evForm\').scrollIntoView()">Add event on this day</button></div>'
   +(de2.length?'<div style="display:flex;flex-direction:column;gap:.5rem;margin-top:.75rem">'+de2.map(evCardHTML).join('')+'</div>':'<div class="emptydash" style="margin-top:.75rem">Nothing scheduled this day. Add a lift, game, or practice below, or pick another day.</div>')+'</div>'}
  var ev=editEvIdx>=0?S.events[editEvIdx]:null;
