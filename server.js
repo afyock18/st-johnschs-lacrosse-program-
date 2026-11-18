@@ -84,6 +84,10 @@ app.use(cookieParser());
 // Password reset mailer (Gmail SMTP). Configured from env only; SMTP_PASS is a
 // Gmail app password. Until it is set, reset emails are skipped (logged) and
 // the forgot-password endpoint still answers with its generic success.
+// Port 587 STARTTLS: outbound port 465 timed out from the Render instance
+// (connection timeout, mailer never reached smtp.gmail.com), so 587 is used
+// with short explicit timeouts so a failed send fails fast instead of
+// hanging the request for ~2 minutes.
 let mailTransporter = null;
 let mailTransporterTried = false;
 function getMailer() {
@@ -96,8 +100,12 @@ function getMailer() {
   try {
     mailTransporter = nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      port: 587,
+      secure: false,
+      requireTLS: true,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
       auth: { user: SMTP_USER, pass: SMTP_PASS },
     });
   } catch (err) {
