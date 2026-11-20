@@ -967,10 +967,20 @@ var chalkPlayIdx=-1, chalkSel=null, chalkRouteMode=null, chalkT=0, chalkPlaying=
 var CHALK_W=100, CHALK_H=60;
 function chalkPlay(){ return (chalkPlayIdx>=0&&S.chalk&&S.chalk[chalkPlayIdx])?S.chalk[chalkPlayIdx]:null; }
 function chalkClamp(v,a,b){ v=+v||0; return v<a?a:(v>b?b:v); }
+/* Player clamp margin 4.5 keeps the body circle (r=2.8) AND the gold selection
+   ring (r=3.9 + 0.8 stroke = 4.3 out) fully inside the field. Ball margin 3.2
+   keeps the ball's selection ring (r=2.6 + 0.8 stroke = 3.0 out) inside. */
+var CHALK_PM=4.5, CHALK_BM=3.2;
+/* The ball is drawn offset down-right of its carrier so it never covers the
+   carrier's circle/label; stored ball positions are unchanged (logical). */
+var CHALK_BALL_OFF={x:4.5,y:2.5};
+function chalkBallDrawPos(bx,by){ return {x:chalkClamp(bx+CHALK_BALL_OFF.x,CHALK_BM,100-CHALK_BM),y:chalkClamp(by+CHALK_BALL_OFF.y,CHALK_BM,60-CHALK_BM)}; }
+/* Keep a player's label text inside the field even for long custom labels. */
+function chalkLabelX(x,txt){ var hw=Math.max(1.9,(String(txt||'').length)*0.95); return chalkClamp(x,hw,100-hw); }
 function chalkFindPlayer(pid){ var p=chalkPlay(); if(!p) return null; for(var i=0;i<(p.players||[]).length;i++) if(p.players[i].id===pid) return p.players[i]; return null; }
 function chalkTeamColor(t){ if(t==='D') return '#2456a6'; if(t==='G') return '#c8a24a'; return (S.teamColor&&/^#[0-9a-fA-F]{6}$/.test(S.teamColor))?S.teamColor:'#a6192e'; }
 function chalkTeamName(t){ return t==='A'?'Attack':(t==='M'?'Midfield':(t==='D'?'Defense':'Goalie')); }
-function chalkNewPlayer(team,x,y,label){ return {id:id(),team:team,label:label||'',x:chalkClamp(x,2,98),y:chalkClamp(y,2,58),route:[]}; }
+function chalkNewPlayer(team,x,y,label){ return {id:id(),team:team,label:label||'',x:chalkClamp(x,CHALK_PM,100-CHALK_PM),y:chalkClamp(y,CHALK_PM,60-CHALK_PM),route:[]}; }
 function chalkDefaultPlay(){
  var ps=[
   chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,46,'A2'),chalkNewPlayer('A',64,54,'A3'),
@@ -1013,11 +1023,17 @@ function chalkDel(i){
 function chalkRenderSoon(){ setTimeout(function(){ render(); },0); }
 function chalkRename(v){
  var p=chalkPlay(); if(!p) return;
- p.name=v; scheduleSave(); chalkRenderSoon();
+ p.name=v; scheduleSave();
+ /* Update the list title in place: a full re-render here would replace the
+    Notes textarea while the user is typing in it and steal their keystrokes. */
+ var el=document.getElementById('chalkListName'+chalkPlayIdx); if(el) el.textContent=v||'Set play';
 }
 function chalkSetDur(v){
  var p=chalkPlay(); if(!p) return;
- p.dur=Math.max(1,Math.min(120,Math.round(+v)||10)); scheduleSave(); chalkRenderSoon();
+ p.dur=Math.max(1,Math.min(120,Math.round(+v)||10)); scheduleSave();
+ /* Same as rename: update in place instead of re-rendering the editor. */
+ var el=document.getElementById('chalkListDur'+chalkPlayIdx); if(el) el.textContent=(p.dur||10)+'s';
+ var t=document.getElementById('chalkTime'); if(t) t.textContent=(chalkT*(p.dur||10)).toFixed(1)+'s / '+(p.dur||10)+'s';
 }
 function chalkSetNotes(v){
  var p=chalkPlay(); if(!p) return;
@@ -1133,10 +1149,10 @@ function chalkFieldSVG(p){
   h+='<g id="chalkP'+pl.id+'" data-pid="'+pl.id+'" onpointerdown="chalkDown(event,'+pl.id+')" style="cursor:grab;touch-action:none">';
   if(sel) h+='<circle cx="'+pos.x+'" cy="'+pos.y+'" r="3.9" fill="none" stroke="#c8a24a" stroke-width="0.8"/>';
   h+='<circle cx="'+pos.x+'" cy="'+pos.y+'" r="2.8" fill="'+col+'" stroke="#fff" stroke-width="0.5"/>';
-  h+='<text x="'+pos.x+'" y="'+(pos.y+1.1)+'" text-anchor="middle" font-size="3.1" font-weight="700" fill="'+(pl.team==='G'?'#1c1a17':'#fff')+'">'+esc(txt)+'</text></g>';
+  h+='<text x="'+chalkLabelX(pos.x,txt)+'" y="'+(pos.y+1.1)+'" text-anchor="middle" font-size="3.1" font-weight="700" fill="'+(pl.team==='G'?'#1c1a17':'#fff')+'">'+esc(txt)+'</text></g>';
  });
- /* ball */
- var bp=chalkPosAt(bpts,chalkT);
+ /* ball (drawn offset from its carrier/path so the carrier's label stays readable) */
+ var bp=chalkPosAt(bpts,chalkT); bp=chalkBallDrawPos(bp.x,bp.y);
  h+='<g id="chalkBall" data-ball="1" onpointerdown="chalkDown(event,\'ball\')" style="cursor:grab;touch-action:none">';
  if(chalkSel==='ball') h+='<circle cx="'+bp.x+'" cy="'+bp.y+'" r="2.6" fill="none" stroke="#c8a24a" stroke-width="0.8"/>';
  h+='<circle cx="'+bp.x+'" cy="'+bp.y+'" r="1.6" fill="#fff" stroke="#1c1a17" stroke-width="0.6"/></g>';
@@ -1153,7 +1169,7 @@ function chalkSvgClick(e){
  var t=e.target;
  if(t&&t.getAttribute&&(t.getAttribute('data-pid')||t.getAttribute('data-ball'))) return;
  var pt=chalkSvgPoint(e); if(!pt) return;
- pt={x:chalkClamp(Math.round(pt.x*10)/10,1,99),y:chalkClamp(Math.round(pt.y*10)/10,1,59)};
+ pt={x:chalkClamp(Math.round(pt.x*10)/10,1.2,98.8),y:chalkClamp(Math.round(pt.y*10)/10,1.2,58.8)};
  if(chalkRouteMode==='player'){
   var pl=chalkSelPlayer(); if(!pl) return;
   pl.route.push(pt);
@@ -1168,7 +1184,13 @@ function chalkDown(e,pid){
  chalkPause(); chalkT=0; chalkRouteMode=null;
  chalkSel=pid;
  var pt=chalkSvgPoint(e);
- chalkDrag={pid:pid,start:pt,moved:false};
+ /* Grab offset: where the pointer is relative to the thing's logical center,
+    so a drag never makes it jump (the ball is drawn offset from its center). */
+ chalkDrag={pid:pid,start:pt,moved:false,gx:0,gy:0};
+ if(pt){
+  if(pid==='ball'){ chalkDrag.gx=pt.x-p.ball.x; chalkDrag.gy=pt.y-p.ball.y; }
+  else { var _pl=chalkFindPlayer(pid); if(_pl){ chalkDrag.gx=pt.x-_pl.x; chalkDrag.gy=pt.y-_pl.y; } }
+ }
  render();
 }
 function chalkMove(e){
@@ -1177,17 +1199,22 @@ function chalkMove(e){
  var pt=chalkSvgPoint(e); if(!pt) return;
  if(chalkDrag.start&&Math.hypot(pt.x-chalkDrag.start.x,pt.y-chalkDrag.start.y)>0.8) chalkDrag.moved=true;
  var pid=chalkDrag.pid;
+ /* Logical position follows the pointer minus the grab offset, so the thing
+    being dragged stays under the pointer instead of snapping its center to it. */
+ var lx=pt.x-(chalkDrag.gx||0), ly=pt.y-(chalkDrag.gy||0);
  if(pid==='ball'){
-  p.ball.x=chalkClamp(pt.x,1.6,98.4); p.ball.y=chalkClamp(pt.y,1.6,58.4);
+  p.ball.x=chalkClamp(lx,1.6,98.4); p.ball.y=chalkClamp(ly,1.6,58.4);
+  var dp=chalkBallDrawPos(p.ball.x,p.ball.y);
   var bg=document.getElementById('chalkBall');
-  if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',p.ball.x); c.setAttribute('cy',p.ball.y); }); }
+  if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',dp.x); c.setAttribute('cy',dp.y); }); }
  } else {
   var pl=chalkFindPlayer(pid); if(!pl) return;
-  pl.x=chalkClamp(pt.x,2.8,97.2); pl.y=chalkClamp(pt.y,2.8,57.2);
+  /* Clamp 4.5 keeps the body circle AND the gold selection ring inside. */
+  pl.x=chalkClamp(lx,CHALK_PM,100-CHALK_PM); pl.y=chalkClamp(ly,CHALK_PM,60-CHALK_PM);
   var g=document.getElementById('chalkP'+pid);
   if(g){
    g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pl.x); c.setAttribute('cy',pl.y); });
-   var t=g.querySelector('text'); if(t){ t.setAttribute('x',pl.x); t.setAttribute('y',pl.y+1.1); }
+   var t=g.querySelector('text'); if(t){ t.setAttribute('x',chalkLabelX(pl.x,pl.label||chalkTeamName(pl.team).charAt(0))); t.setAttribute('y',pl.y+1.1); }
   }
   var rp=document.getElementById('chalkRoute'+pid);
   if(rp) rp.setAttribute('points',chalkRoutePoints(pl));
@@ -1212,11 +1239,11 @@ function chalkApplyPositions(){
   var pos=chalkPosAt(chalkPts(pl),chalkT);
   var g=document.getElementById('chalkP'+pl.id); if(!g) return;
   g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pos.x); c.setAttribute('cy',pos.y); });
-  var t=g.querySelector('text'); if(t){ t.setAttribute('x',pos.x); t.setAttribute('y',pos.y+1.1); }
+  var t=g.querySelector('text'); if(t){ t.setAttribute('x',chalkLabelX(pos.x,pl.label||chalkTeamName(pl.team).charAt(0))); t.setAttribute('y',pos.y+1.1); }
  });
  var bp=chalkPosAt(chalkBallPts(p),chalkT);
  var bg=document.getElementById('chalkBall');
- if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',bp.x); c.setAttribute('cy',bp.y); }); }
+ if(bg){ var dp=chalkBallDrawPos(bp.x,bp.y); bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',dp.x); c.setAttribute('cy',dp.y); }); }
 }
 function chalkTick(ts){
  if(!chalkPlaying) return;
@@ -1256,7 +1283,7 @@ function chalkListHTML(){
  var h='<div class="card"><div class="pagehead"><h3 style="margin:0">Set plays</h3><button class="primary" onclick="chalkNewPlay()">New play</button></div>';
  if(!list.length){ h+='<p class="empty-note">No set plays yet. Create your first one — it starts with a full 6v6 set plus a goalie on half a field.</p></div>'; return h; }
  h+='<ul class="planlist">'+list.map(function(pl,i){
-  return '<li><button class="planrow'+(chalkPlayIdx===i?' active':'')+'" onclick="chalkOpen('+i+')"><span class="planrow-main"><span class="planrow-title">'+esc(pl.name||'Set play')+'</span><span class="planrow-meta">'+esc(pl.created||'')+' · '+((pl.players||[]).length)+' players</span></span><span class="planrow-side"><span class="planrow-dur">'+(pl.dur||10)+'s</span></span></button>'
+  return '<li><button class="planrow'+(chalkPlayIdx===i?' active':'')+'" onclick="chalkOpen('+i+')"><span class="planrow-main"><span class="planrow-title" id="chalkListName'+i+'">'+esc(pl.name||'Set play')+'</span><span class="planrow-meta">'+esc(pl.created||'')+' · '+((pl.players||[]).length)+' players</span></span><span class="planrow-side"><span class="planrow-dur" id="chalkListDur'+i+'">'+(pl.dur||10)+'s</span></span></button>'
   +'<div class="row" style="padding:0 .5rem .5rem"><button class="small" onclick="chalkOpen('+i+')">Open</button><button class="small" onclick="chalkDup('+i+')">Duplicate</button><button class="small danger" onclick="chalkDel('+i+')">Delete</button></div></li>';
  }).join('')+'</ul></div>';
  return h;
