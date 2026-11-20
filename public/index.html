@@ -969,8 +969,12 @@ function chalkPlay(){ return (chalkPlayIdx>=0&&S.chalk&&S.chalk[chalkPlayIdx])?S
 function chalkClamp(v,a,b){ v=+v||0; return v<a?a:(v>b?b:v); }
 /* Player clamp margin 4.5 keeps the body circle (r=2.8) AND the gold selection
    ring (r=3.9 + 0.8 stroke = 4.3 out) fully inside the field. Ball margin 3.2
-   keeps the ball's selection ring (r=2.6 + 0.8 stroke = 3.0 out) inside. */
-var CHALK_PM=4.5, CHALK_BM=3.2;
+   keeps the ball's selection ring (r=2.6 + 0.8 stroke = 3.0 out) inside.
+   Top margin 5.5 is larger on purpose: the midfield line at y=0 paints a
+   0.55-unit black band across the top, and at 4.5 the ring's top arc sat only
+   0.2 units from the edge, overlapping that band, so the arc read as cut off
+   by the border. At 5.5 the ring's top clears the band with a visible gap. */
+var CHALK_PM=4.5, CHALK_PM_TOP=5.5, CHALK_BM=3.2;
 /* The ball is drawn offset down-right of its carrier so it never covers the
    carrier's circle/label; stored ball positions are unchanged (logical). */
 var CHALK_BALL_OFF={x:4.5,y:2.5};
@@ -980,13 +984,13 @@ function chalkLabelX(x,txt){ var hw=Math.max(1.9,(String(txt||'').length)*0.95);
 function chalkFindPlayer(pid){ var p=chalkPlay(); if(!p) return null; for(var i=0;i<(p.players||[]).length;i++) if(p.players[i].id===pid) return p.players[i]; return null; }
 function chalkTeamColor(t){ if(t==='D') return '#2456a6'; if(t==='G') return '#c8a24a'; return (S.teamColor&&/^#[0-9a-fA-F]{6}$/.test(S.teamColor))?S.teamColor:'#a6192e'; }
 function chalkTeamName(t){ return t==='A'?'Attack':(t==='M'?'Midfield':(t==='D'?'Defense':'Goalie')); }
-function chalkNewPlayer(team,x,y,label){ return {id:id(),team:team,label:label||'',x:chalkClamp(x,CHALK_PM,100-CHALK_PM),y:chalkClamp(y,CHALK_PM,60-CHALK_PM),route:[]}; }
+function chalkNewPlayer(team,x,y,label){ return {id:id(),team:team,label:label||'',x:chalkClamp(x,CHALK_PM,100-CHALK_PM),y:chalkClamp(y,CHALK_PM_TOP,60-CHALK_PM),route:[]}; }
 function chalkDefaultPlay(){
  var ps=[
-  chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,46,'A2'),chalkNewPlayer('A',64,54,'A3'),
+  chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,41,'A2'),chalkNewPlayer('A',64,54,'A3'),
   chalkNewPlayer('M',28,18,'M1'),chalkNewPlayer('M',50,12,'M2'),chalkNewPlayer('M',72,18,'M3'),
-  chalkNewPlayer('D',28,42,'D1'),chalkNewPlayer('D',40,48,'D2'),chalkNewPlayer('D',50,52,'D3'),
-  chalkNewPlayer('D',60,48,'D4'),chalkNewPlayer('D',72,42,'D5'),chalkNewPlayer('D',50,38,'D6'),
+  chalkNewPlayer('D',28,42,'D1'),chalkNewPlayer('D',40,48,'D2'),chalkNewPlayer('D',50,48,'D3'),
+  chalkNewPlayer('D',60,48,'D4'),chalkNewPlayer('D',72,42,'D5'),chalkNewPlayer('D',50,34,'D6'),
   chalkNewPlayer('G',50,59,'G1')
  ];
  return {id:id(),name:'New set play',notes:'',dur:10,created:todayStr(),players:ps,ball:{x:ps[1].x,y:ps[1].y,carrier:ps[1].id,path:[]}};
@@ -1209,8 +1213,8 @@ function chalkMove(e){
   if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',dp.x); c.setAttribute('cy',dp.y); }); }
  } else {
   var pl=chalkFindPlayer(pid); if(!pl) return;
-  /* Clamp 4.5 keeps the body circle AND the gold selection ring inside. */
-  pl.x=chalkClamp(lx,CHALK_PM,100-CHALK_PM); pl.y=chalkClamp(ly,CHALK_PM,60-CHALK_PM);
+  /* Top clamp 5.5 keeps the gold selection ring clear of the top border. */
+  pl.x=chalkClamp(lx,CHALK_PM,100-CHALK_PM); pl.y=chalkClamp(ly,CHALK_PM_TOP,60-CHALK_PM);
   var g=document.getElementById('chalkP'+pid);
   if(g){
    g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pl.x); c.setAttribute('cy',pl.y); });
