@@ -967,14 +967,17 @@ var chalkPlayIdx=-1, chalkSel=null, chalkRouteMode=null, chalkT=0, chalkPlaying=
 var CHALK_W=100, CHALK_H=60;
 function chalkPlay(){ return (chalkPlayIdx>=0&&S.chalk&&S.chalk[chalkPlayIdx])?S.chalk[chalkPlayIdx]:null; }
 function chalkClamp(v,a,b){ v=+v||0; return v<a?a:(v>b?b:v); }
-/* Player clamp margin 4.5 keeps the body circle (r=2.8) AND the gold selection
-   ring (r=3.9 + 0.8 stroke = 4.3 out) fully inside the field. Ball margin 3.2
-   keeps the ball's selection ring (r=2.6 + 0.8 stroke = 3.0 out) inside.
-   Top margin 5.5 is larger on purpose: the midfield line at y=0 paints a
-   0.55-unit black band across the top, and at 4.5 the ring's top arc sat only
-   0.2 units from the edge, overlapping that band, so the arc read as cut off
-   by the border. At 5.5 the ring's top clears the band with a visible gap. */
-var CHALK_PM=4.5, CHALK_PM_TOP=5.5, CHALK_BM=3.2;
+/* Player clamp margin 5.5 keeps the body circle (r=2.8) AND the gold selection
+   ring (r=3.9 + 0.8 stroke = 4.3 out) clear of every border with a visible
+   gap. At 4.5 the ring's outer edge sat only 0.2 units from the edge line and
+   overlapped the 0.5-wide border stroke, so at the corners the arc merged
+   with the side border and crossed into the white margin. At 5.5 the ring
+   clears the border on all four sides, and the top also clears the 0.55-unit
+   black midfield band painted at y=0. Ball margin 4.2 keeps the ball's
+   selection ring (r=2.6 + 0.8 stroke = 3.0 out) clear of the borders with
+   the same 1.2-unit gap: at 3.2 the ring's outer edge sat only 0.2 units from
+   the right/bottom edge lines and merged with the border stroke there. */
+var CHALK_PM=5.5, CHALK_PM_TOP=5.5, CHALK_BM=4.2;
 /* The ball is drawn offset down-right of its carrier so it never covers the
    carrier's circle/label; stored ball positions are unchanged (logical). */
 var CHALK_BALL_OFF={x:4.5,y:2.5};
@@ -1213,7 +1216,7 @@ function chalkMove(e){
   if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',dp.x); c.setAttribute('cy',dp.y); }); }
  } else {
   var pl=chalkFindPlayer(pid); if(!pl) return;
-  /* Top clamp 5.5 keeps the gold selection ring clear of the top border. */
+  /* Clamp 5.5 keeps the gold selection ring clear of every border. */
   pl.x=chalkClamp(lx,CHALK_PM,100-CHALK_PM); pl.y=chalkClamp(ly,CHALK_PM_TOP,60-CHALK_PM);
   var g=document.getElementById('chalkP'+pid);
   if(g){
