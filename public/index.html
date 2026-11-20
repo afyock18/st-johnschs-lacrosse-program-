@@ -973,7 +973,7 @@ function chalkTeamName(t){ return t==='A'?'Attack':(t==='M'?'Midfield':(t==='D'?
 function chalkNewPlayer(team,x,y,label){ return {id:id(),team:team,label:label||'',x:chalkClamp(x,2,98),y:chalkClamp(y,2,58),route:[]}; }
 function chalkDefaultPlay(){
  var ps=[
-  chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,57,'A2'),chalkNewPlayer('A',64,54,'A3'),
+  chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,46,'A2'),chalkNewPlayer('A',64,54,'A3'),
   chalkNewPlayer('M',28,18,'M1'),chalkNewPlayer('M',50,12,'M2'),chalkNewPlayer('M',72,18,'M3'),
   chalkNewPlayer('D',28,42,'D1'),chalkNewPlayer('D',40,48,'D2'),chalkNewPlayer('D',50,52,'D3'),
   chalkNewPlayer('D',60,48,'D4'),chalkNewPlayer('D',72,42,'D5'),chalkNewPlayer('D',50,38,'D6'),
@@ -1153,7 +1153,7 @@ function chalkSvgClick(e){
  var t=e.target;
  if(t&&t.getAttribute&&(t.getAttribute('data-pid')||t.getAttribute('data-ball'))) return;
  var pt=chalkSvgPoint(e); if(!pt) return;
- pt={x:Math.round(pt.x*10)/10,y:Math.round(pt.y*10)/10};
+ pt={x:chalkClamp(Math.round(pt.x*10)/10,1,99),y:chalkClamp(Math.round(pt.y*10)/10,1,59)};
  if(chalkRouteMode==='player'){
   var pl=chalkSelPlayer(); if(!pl) return;
   pl.route.push(pt);
@@ -1178,12 +1178,12 @@ function chalkMove(e){
  if(chalkDrag.start&&Math.hypot(pt.x-chalkDrag.start.x,pt.y-chalkDrag.start.y)>0.8) chalkDrag.moved=true;
  var pid=chalkDrag.pid;
  if(pid==='ball'){
-  p.ball.x=chalkClamp(pt.x,1,99); p.ball.y=chalkClamp(pt.y,1,59);
+  p.ball.x=chalkClamp(pt.x,1.6,98.4); p.ball.y=chalkClamp(pt.y,1.6,58.4);
   var bg=document.getElementById('chalkBall');
   if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',p.ball.x); c.setAttribute('cy',p.ball.y); }); }
  } else {
   var pl=chalkFindPlayer(pid); if(!pl) return;
-  pl.x=chalkClamp(pt.x,2,98); pl.y=chalkClamp(pt.y,2,58);
+  pl.x=chalkClamp(pt.x,2.8,97.2); pl.y=chalkClamp(pt.y,2.8,57.2);
   var g=document.getElementById('chalkP'+pid);
   if(g){
    g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pl.x); c.setAttribute('cy',pl.y); });
@@ -1256,7 +1256,7 @@ function chalkListHTML(){
  var h='<div class="card"><div class="pagehead"><h3 style="margin:0">Set plays</h3><button class="primary" onclick="chalkNewPlay()">New play</button></div>';
  if(!list.length){ h+='<p class="empty-note">No set plays yet. Create your first one — it starts with a full 6v6 set plus a goalie on half a field.</p></div>'; return h; }
  h+='<ul class="planlist">'+list.map(function(pl,i){
-  return '<li><button class="planrow'+(chalkPlayIdx===i?' active':'')+'" onclick="chalkOpen('+i+')"><span class="planrow-main"><span class="planrow-title">'+esc(pl.name||'Set play')+'</span><span class="planrow-meta">'+esc(pl.created||'')+' · '+((pl.players||[]).length)+' players · '+(pl.dur||10)+'s</span></span><span class="planrow-side"><span class="planrow-dur">'+(pl.dur||10)+'s</span></span></button>'
+  return '<li><button class="planrow'+(chalkPlayIdx===i?' active':'')+'" onclick="chalkOpen('+i+')"><span class="planrow-main"><span class="planrow-title">'+esc(pl.name||'Set play')+'</span><span class="planrow-meta">'+esc(pl.created||'')+' · '+((pl.players||[]).length)+' players</span></span><span class="planrow-side"><span class="planrow-dur">'+(pl.dur||10)+'s</span></span></button>'
   +'<div class="row" style="padding:0 .5rem .5rem"><button class="small" onclick="chalkOpen('+i+')">Open</button><button class="small" onclick="chalkDup('+i+')">Duplicate</button><button class="small danger" onclick="chalkDel('+i+')">Delete</button></div></li>';
  }).join('')+'</ul></div>';
  return h;
@@ -1267,7 +1267,7 @@ function chalkEditorHTML(p){
  +'<div><label>Play name</label><input id="chalkName" value="'+esc(p.name||'')+'" onchange="chalkRename(this.value)"></div>'
  +'<div class="grid2"><div><label>Duration (seconds)</label><input type="number" min="1" max="120" step="1" value="'+(p.dur||10)+'" onchange="chalkSetDur(this.value)"></div>'
  +'<div><label>Saved</label><input value="'+esc(p.created||'')+'" disabled></div></div>'
- +'<div><label>Notes</label><textarea rows="2" onchange="chalkSetNotes(this.value)">'+esc(p.notes||'')+'</textarea></div>'
+ +'<div><label>Notes</label><textarea rows="2" oninput="chalkSetNotes(this.value)">'+esc(p.notes||'')+'</textarea></div>'
  +'<div style="margin-top:1rem"><div class="chalkfield">'+chalkFieldSVG(p)+'</div>'
  +'<p class="hint">'+(chalkRouteMode==='player'?'Adding route points for '+(sel?esc(sel.label||chalkTeamName(sel.team)):'')+' — click the field to add a point. Click "Done adding" to stop.'
   :chalkRouteMode==='ball'?'Adding ball path points — click the field to add a pass or carry point. Click "Done adding" to stop.'
