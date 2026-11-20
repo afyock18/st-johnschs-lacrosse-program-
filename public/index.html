@@ -270,6 +270,8 @@ input[type=color]{width:3.5rem;height:2.5rem;padding:.25rem;cursor:pointer}
 @media(min-width:640px){.professional-sheet .sh-side-timecol{width:150px}}
 .professional-sheet .sh-side-list li:last-child{border-bottom:none}
 @media(max-width:640px){.cal .day{min-height:4rem;font-size:.68rem}h1{font-size:1.35rem}}
+.chalkfield{width:100%;aspect-ratio:5/3;display:block}
+.chalksvg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
 @media print{body>*{display:none}}
 </style>
 </head>
@@ -294,7 +296,7 @@ var S={page:'plans',sub:'your',cats:CATS0.slice(),
  depth:{Attack:['Bennet Lusin','Nash Parker','River Maier'],Defense:['Caleb Arata','Ben Phillips','Cole Guck'],Goalie:['Mason Pollin','Peter Kimmel','Nate Isaacson','Trip Rafferty'],LSM:['Will Klauder','Cole Notaro','Aj Verdun'],Midfield:['Jack Henry','Wyatt Douglas','Tyler Secrest','Ryan Arata','Cash McCrann','Owen Struzziero','Stone Parker'],SSDM:['Kyle Archer','Ryan Archer','Bronston Brothers','Eliot Rhines','Reid Henry']},
  recruits:[{id:id(),name:'Joe Smith',year:2031,pos:'Attack',school:'Landon',club:'Madlax',email:'alericfyock1@gmail.com',phone:'4107035083',bio:'',committed:true,stars:5}],
  rankings:{2031:['Joe Smith']},
- plans:[],events:[],sessions:[],
+ plans:[],events:[],sessions:[],chalk:[],
  template:'Classic',logo:'',teamColor:'#a6192e',
  genFocus:[],genVary:false,buildPicks:[],calCursor:new Date(),calFilter:'all',calView:'grid',rankClass:2031,lastCalc:''};
 var STATS=['Ground balls','Shots','Shots off target','Shots on target','Goals','Turnovers','Caused turnovers','Saves','Face-off won','Face-off lost'];
@@ -311,11 +313,11 @@ function parseTime(t){if(!t)return 15*60+30;var p=t.split(':');return (+p[0])*60
 function todayStr(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
 </script>
 <script>
-var PAGES=[['plans','Practice plans'],['drills','Drill bank'],['roster','Roster'],['depth','Depth chart'],['recruits','Recruits'],['stats','Stat tracking'],['calendar','Calendar']];
+var PAGES=[['plans','Practice plans'],['drills','Drill bank'],['roster','Roster'],['depth','Depth chart'],['recruits','Recruits'],['stats','Stat tracking'],['calendar','Calendar'],['chalk','Chalk Talk']];
 var app=document.getElementById('app');
 function renderTabs(){document.getElementById('mainTabs').innerHTML=PAGES.map(function(p){return '<button class="'+(S.page===p[0]?'active':'')+'" onclick="go(\''+p[0]+'\')">'+p[1]+'</button>'}).join('')}
 function go(p){S.page=p;render()}
-function render(){renderTabs();if(S.page==='plans')renderPlans();else if(S.page==='drills')renderDrills();else if(S.page==='roster')renderRoster();else if(S.page==='depth')renderDepth();else if(S.page==='recruits')renderRecruits();else if(S.page==='stats')renderStats();else if(S.page==='calendar')renderCalendar()}
+function render(){renderTabs();if(S.page==='plans')renderPlans();else if(S.page==='drills')renderDrills();else if(S.page==='roster')renderRoster();else if(S.page==='depth')renderDepth();else if(S.page==='recruits')renderRecruits();else if(S.page==='stats')renderStats();else if(S.page==='calendar')renderCalendar();else if(S.page==='chalk')renderChalk()}
 /* ---------- FIELD DIAGRAMS ---------- */
 function fieldSVG(half){
  if(half)return '<svg viewBox="0 0 130 120" style="width:100%;display:block" role="img" aria-label="Blank diagram of one attacking half of a lacrosse field, with restraining box and crease"><g fill="none" stroke="currentColor" stroke-width="1.6"><rect x="10" y="10" width="110" height="100" stroke-width="2.2"/><rect x="10" y="28" width="58" height="64"/><circle cx="36" cy="60" r="9"/><rect x="33.5" y="57.5" width="5" height="5" fill="currentColor" stroke="none"/></g></svg>';
@@ -960,8 +962,365 @@ function renderCalendar(){
 }
 function saveEvent(){var obj={type:document.getElementById('eType').value,title:document.getElementById('eTitle').value.trim()||'Event',date:document.getElementById('eDate').value,start:document.getElementById('eStart').value,end:document.getElementById('eEnd').value,location:document.getElementById('eLoc').value,opp:document.getElementById('eOpp').value,notes:document.getElementById('eNotes').value};if(editEvIdx>=0){S.events[editEvIdx]=obj;editEvIdx=-1;toast('Event updated')}else{S.events.push(obj);toast('Event added')}render()}
 function openPlanViewer(i){var p=S.plans[i];if(!p)return;window._sheetPlanIdx=i;openModal('<div class="card"><b>View only</b> — read the plan sheet here; tap "Download PDF" below if you want a PDF copy.<br>'+templatePicker()+'</div><div id="viewerSheet">'+sheetHTML(p)+'</div><div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="closeModal();S.page=\'plans\';S.sub=\'your\';editPlanIdx='+i+';render()">Edit plan</button><button onclick="document.getElementById(\'viewerSheet\').innerHTML=sheetHTML(S.plans['+i+'])">Refresh sheet for template</button></div>')}
+/* ---------- CHALK TALK ---------- */
+var chalkPlayIdx=-1, chalkSel=null, chalkRouteMode=null, chalkT=0, chalkPlaying=false, chalkSpeed=1, chalkRaf=null, chalkLast=0, chalkDrag=null;
+var CHALK_W=100, CHALK_H=60;
+function chalkPlay(){ return (chalkPlayIdx>=0&&S.chalk&&S.chalk[chalkPlayIdx])?S.chalk[chalkPlayIdx]:null; }
+function chalkClamp(v,a,b){ v=+v||0; return v<a?a:(v>b?b:v); }
+function chalkFindPlayer(pid){ var p=chalkPlay(); if(!p) return null; for(var i=0;i<(p.players||[]).length;i++) if(p.players[i].id===pid) return p.players[i]; return null; }
+function chalkTeamColor(t){ if(t==='D') return '#2456a6'; if(t==='G') return '#c8a24a'; return (S.teamColor&&/^#[0-9a-fA-F]{6}$/.test(S.teamColor))?S.teamColor:'#a6192e'; }
+function chalkTeamName(t){ return t==='A'?'Attack':(t==='M'?'Midfield':(t==='D'?'Defense':'Goalie')); }
+function chalkNewPlayer(team,x,y,label){ return {id:id(),team:team,label:label||'',x:chalkClamp(x,2,98),y:chalkClamp(y,2,58),route:[]}; }
+function chalkDefaultPlay(){
+ var ps=[
+  chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,57,'A2'),chalkNewPlayer('A',64,54,'A3'),
+  chalkNewPlayer('M',28,18,'M1'),chalkNewPlayer('M',50,12,'M2'),chalkNewPlayer('M',72,18,'M3'),
+  chalkNewPlayer('D',28,42,'D1'),chalkNewPlayer('D',40,48,'D2'),chalkNewPlayer('D',50,52,'D3'),
+  chalkNewPlayer('D',60,48,'D4'),chalkNewPlayer('D',72,42,'D5'),chalkNewPlayer('D',50,38,'D6'),
+  chalkNewPlayer('G',50,59,'G1')
+ ];
+ return {id:id(),name:'New set play',notes:'',dur:10,created:todayStr(),players:ps,ball:{x:ps[1].x,y:ps[1].y,carrier:ps[1].id,path:[]}};
+}
+function chalkNewPlay(){
+ if(!S.chalk) S.chalk=[];
+ var pl=chalkDefaultPlay(); S.chalk.push(pl);
+ chalkPlayIdx=S.chalk.length-1; chalkSel=null; chalkRouteMode=null; chalkReset();
+ render(); toast('New play created');
+}
+function chalkOpen(i){
+ if(!S.chalk||!S.chalk[i]) return;
+ chalkPlayIdx=i; chalkSel=null; chalkRouteMode=null; chalkReset(); render();
+}
+function chalkDup(i){
+ var p=S.chalk&&S.chalk[i]; if(!p) return;
+ var c=JSON.parse(JSON.stringify(p));
+ var remap={};
+ c.id=id(); c.name=(p.name||'Set play')+' copy'; c.created=todayStr();
+ (c.players||[]).forEach(function(pl){ var nid=id(); remap[pl.id]=nid; pl.id=nid; });
+ if(c.ball&&c.ball.carrier&&remap[c.ball.carrier]) c.ball.carrier=remap[c.ball.carrier];
+ S.chalk.push(c); chalkPlayIdx=S.chalk.length-1; chalkSel=null; chalkRouteMode=null; chalkReset();
+ scheduleSave(); render(); toast('Play duplicated');
+}
+function chalkDel(i){
+ var p=S.chalk&&S.chalk[i]; if(!p) return;
+ askConfirm('Delete play "'+(p.name||'Set play')+'"?',function(){
+  S.chalk.splice(i,1);
+  if(chalkPlayIdx===i){ chalkPlayIdx=-1; chalkSel=null; chalkRouteMode=null; chalkReset(); }
+  else if(chalkPlayIdx>i) chalkPlayIdx--;
+  scheduleSave(); render(); toast('Play deleted');
+ });
+}
+function chalkRenderSoon(){ setTimeout(function(){ render(); },0); }
+function chalkRename(v){
+ var p=chalkPlay(); if(!p) return;
+ p.name=v; scheduleSave(); chalkRenderSoon();
+}
+function chalkSetDur(v){
+ var p=chalkPlay(); if(!p) return;
+ p.dur=Math.max(1,Math.min(120,Math.round(+v)||10)); scheduleSave(); chalkRenderSoon();
+}
+function chalkSetNotes(v){
+ var p=chalkPlay(); if(!p) return;
+ p.notes=v; scheduleSave();
+}
+function chalkAddPlayer(){
+ var p=chalkPlay(); if(!p) return;
+ var team=document.getElementById('chalkAddTeam').value;
+ var spots={A:[[50,50],[38,54],[62,54]],M:[[50,20],[30,24],[70,24]],D:[[50,44],[34,46],[66,46]],G:[[50,59]]};
+ var n=(p.players||[]).filter(function(x){return x.team===team}).length;
+ var sp=(spots[team]||[[50,30]])[n%(spots[team]||[[50,30]]).length];
+ var pl=chalkNewPlayer(team,sp[0],sp[1],team+(n+1));
+ p.players.push(pl); chalkSel=pl.id; chalkRouteMode=null;
+ scheduleSave(); render(); toast(chalkTeamName(team)+' added');
+}
+function chalkSelPlayer(){
+ if(chalkSel==='ball') return null;
+ return chalkFindPlayer(chalkSel);
+}
+function chalkSetLabel(v){
+ var pl=chalkSelPlayer(); if(!pl) return;
+ pl.label=v; scheduleSave(); chalkRenderSoon();
+}
+function chalkSetTeam(v){
+ var pl=chalkSelPlayer(); if(!pl) return;
+ pl.team=v; scheduleSave(); chalkRenderSoon();
+}
+function chalkRemovePlayer(){
+ var p=chalkPlay(), pl=chalkSelPlayer(); if(!p||!pl) return;
+ askConfirm('Remove player "'+(pl.label||chalkTeamName(pl.team))+'" from this play?',function(){
+  if(p.ball&&p.ball.carrier===pl.id){ p.ball.carrier=null; }
+  p.players=p.players.filter(function(x){return x.id!==pl.id});
+  chalkSel=null; chalkRouteMode=null; scheduleSave(); render(); toast('Player removed');
+ });
+}
+function chalkSetRouteMode(m){
+ chalkRouteMode=(chalkRouteMode===m)?null:m;
+ render();
+}
+function chalkSelectPlayer(pid){
+ chalkSel=pid;
+ render();
+}
+function chalkClearRoute(){
+ var pl=chalkSelPlayer(); if(!pl) return;
+ pl.route=[]; scheduleSave(); render(); toast('Route cleared');
+}
+function chalkClearBallPath(){
+ var p=chalkPlay(); if(!p) return;
+ p.ball.path=[]; scheduleSave(); render(); toast('Ball path cleared');
+}
+function chalkSetCarrier(v){
+ var p=chalkPlay(); if(!p) return;
+ var pid=v===''?null:+v;
+ p.ball.carrier=pid;
+ if(pid){ var pl=chalkFindPlayer(pid); if(pl){ p.ball.x=pl.x; p.ball.y=pl.y; } }
+ scheduleSave(); render();
+}
+/* ----- field geometry + animation ----- */
+function chalkPts(pl){ var pts=[{x:pl.x,y:pl.y}]; (pl.route||[]).forEach(function(w){pts.push({x:w.x,y:w.y})}); return pts; }
+function chalkBallPts(p){ var pts=[{x:p.ball.x,y:p.ball.y}]; (p.ball.path||[]).forEach(function(w){pts.push({x:w.x,y:w.y})}); return pts; }
+function chalkPosAt(pts,t){
+ if(!pts||!pts.length) return {x:50,y:30};
+ if(pts.length<2) return {x:pts[0].x,y:pts[0].y};
+ var total=0, i;
+ for(i=1;i<pts.length;i++) total+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+ if(total<=0) return {x:pts[0].x,y:pts[0].y};
+ var d=chalkClamp(t,0,1)*total;
+ for(i=1;i<pts.length;i++){
+  var s=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+  if(d<=s||i===pts.length-1){ var f=s?d/s:0; return {x:pts[i-1].x+(pts[i].x-pts[i-1].x)*f,y:pts[i-1].y+(pts[i].y-pts[i-1].y)*f}; }
+  d-=s;
+ }
+ var l=pts[pts.length-1]; return {x:l.x,y:l.y};
+}
+function chalkRoutePoints(pl){ return chalkPts(pl).map(function(q){return q.x.toFixed(1)+','+q.y.toFixed(1)}).join(' '); }
+function chalkFieldSVG(p){
+ var h='<svg id="chalkSvg" class="chalksvg" viewBox="0 0 100 60" preserveAspectRatio="xMidYMid meet" onclick="chalkSvgClick(event)" role="img" aria-label="Half of a lacrosse field, goal at the bottom">';
+ h+='<defs>'
+  +'<marker id="chArrO" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="'+chalkTeamColor('A')+'"/></marker>'
+  +'<marker id="chArrD" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#2456a6"/></marker>'
+  +'<marker id="chArrB" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="3.2" markerHeight="3.2" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1c1a17"/></marker>'
+  +'</defs>';
+ /* field markings: boundary, midfield line (top), restraining box, wing guides, crease, goal */
+ h+='<rect x="0" y="0" width="100" height="60" fill="var(--soft)" stroke="currentColor" stroke-width="0.5"/>';
+ h+='<line x1="0" y1="0" x2="100" y2="0" stroke="currentColor" stroke-width="1.1"/>';
+ h+='<line x1="48" y1="0" x2="52" y2="0" stroke="currentColor" stroke-width="1.1"/>';
+ h+='<rect x="20" y="40" width="60" height="20" fill="none" stroke="currentColor" stroke-width="0.5"/>';
+ h+='<line x1="20" y1="0" x2="20" y2="40" stroke="currentColor" stroke-width="0.35" stroke-dasharray="2 1.5"/>';
+ h+='<line x1="80" y1="0" x2="80" y2="40" stroke="currentColor" stroke-width="0.35" stroke-dasharray="2 1.5"/>';
+ h+='<path d="M41 60 A9 9 0 0 1 59 60" fill="none" stroke="currentColor" stroke-width="0.5"/>';
+ h+='<rect x="45" y="58.2" width="10" height="1.8" fill="currentColor" stroke="none"/>';
+ h+='<text x="50" y="3.2" text-anchor="middle" font-size="2.6" fill="currentColor" opacity="0.6">MIDFIELD</text>';
+ h+='<text x="97" y="59" text-anchor="end" font-size="2.4" fill="currentColor" opacity="0.6">GOAL</text>';
+ /* routes */
+ (p.players||[]).forEach(function(pl){
+  var pts=chalkPts(pl);
+  if(pts.length>1){
+   var col=chalkTeamColor(pl.team), mk=pl.team==='D'?'chArrD':'chArrO';
+   h+='<polyline id="chalkRoute'+pl.id+'" points="'+chalkRoutePoints(pl)+'" fill="none" stroke="'+col+'" stroke-width="0.55" stroke-dasharray="2 1.2" marker-end="url(#'+mk+')" opacity="0.9"/>';
+   pts.slice(1).forEach(function(w){ h+='<circle cx="'+w.x+'" cy="'+w.y+'" r="0.9" fill="'+col+'" stroke="#fff" stroke-width="0.3"/>'; });
+  }
+ });
+ var bpts=chalkBallPts(p);
+ if(bpts.length>1){
+  h+='<polyline id="chalkBallPath" points="'+bpts.map(function(q){return q.x.toFixed(1)+','+q.y.toFixed(1)}).join(' ')+'" fill="none" stroke="#1c1a17" stroke-width="0.6" marker-end="url(#chArrB)"/>';
+  bpts.slice(1).forEach(function(w){ h+='<circle cx="'+w.x+'" cy="'+w.y+'" r="0.9" fill="#1c1a17" stroke="#fff" stroke-width="0.3"/>'; });
+ }
+ /* players at current playback position */
+ (p.players||[]).forEach(function(pl){
+  var pos=chalkPosAt(chalkPts(pl),chalkT), col=chalkTeamColor(pl.team), sel=(chalkSel===pl.id);
+  var txt=pl.label||chalkTeamName(pl.team).charAt(0);
+  h+='<g id="chalkP'+pl.id+'" data-pid="'+pl.id+'" onpointerdown="chalkDown(event,'+pl.id+')" style="cursor:grab;touch-action:none">';
+  if(sel) h+='<circle cx="'+pos.x+'" cy="'+pos.y+'" r="3.9" fill="none" stroke="#c8a24a" stroke-width="0.8"/>';
+  h+='<circle cx="'+pos.x+'" cy="'+pos.y+'" r="2.8" fill="'+col+'" stroke="#fff" stroke-width="0.5"/>';
+  h+='<text x="'+pos.x+'" y="'+(pos.y+1.1)+'" text-anchor="middle" font-size="3.1" font-weight="700" fill="'+(pl.team==='G'?'#1c1a17':'#fff')+'">'+esc(txt)+'</text></g>';
+ });
+ /* ball */
+ var bp=chalkPosAt(bpts,chalkT);
+ h+='<g id="chalkBall" data-ball="1" onpointerdown="chalkDown(event,\'ball\')" style="cursor:grab;touch-action:none">';
+ if(chalkSel==='ball') h+='<circle cx="'+bp.x+'" cy="'+bp.y+'" r="2.6" fill="none" stroke="#c8a24a" stroke-width="0.8"/>';
+ h+='<circle cx="'+bp.x+'" cy="'+bp.y+'" r="1.6" fill="#fff" stroke="#1c1a17" stroke-width="0.6"/></g>';
+ h+='</svg>';
+ return h;
+}
+function chalkSvgPoint(e){
+ var svg=document.getElementById('chalkSvg'); if(!svg) return null;
+ var r=svg.getBoundingClientRect();
+ return {x:chalkClamp((e.clientX-r.left)/r.width*100,0,100),y:chalkClamp((e.clientY-r.top)/r.height*60,0,60)};
+}
+function chalkSvgClick(e){
+ var p=chalkPlay(); if(!p||!chalkRouteMode) return;
+ var t=e.target;
+ if(t&&t.getAttribute&&(t.getAttribute('data-pid')||t.getAttribute('data-ball'))) return;
+ var pt=chalkSvgPoint(e); if(!pt) return;
+ pt={x:Math.round(pt.x*10)/10,y:Math.round(pt.y*10)/10};
+ if(chalkRouteMode==='player'){
+  var pl=chalkSelPlayer(); if(!pl) return;
+  pl.route.push(pt);
+ } else if(chalkRouteMode==='ball'){
+  p.ball.path.push(pt);
+ }
+ scheduleSave(); render();
+}
+function chalkDown(e,pid){
+ var p=chalkPlay(); if(!p) return;
+ e.preventDefault(); e.stopPropagation();
+ chalkPause(); chalkT=0; chalkRouteMode=null;
+ chalkSel=pid;
+ var pt=chalkSvgPoint(e);
+ chalkDrag={pid:pid,start:pt,moved:false};
+ render();
+}
+function chalkMove(e){
+ if(!chalkDrag) return;
+ var p=chalkPlay(); if(!p) return;
+ var pt=chalkSvgPoint(e); if(!pt) return;
+ if(chalkDrag.start&&Math.hypot(pt.x-chalkDrag.start.x,pt.y-chalkDrag.start.y)>0.8) chalkDrag.moved=true;
+ var pid=chalkDrag.pid;
+ if(pid==='ball'){
+  p.ball.x=chalkClamp(pt.x,1,99); p.ball.y=chalkClamp(pt.y,1,59);
+  var bg=document.getElementById('chalkBall');
+  if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',p.ball.x); c.setAttribute('cy',p.ball.y); }); }
+ } else {
+  var pl=chalkFindPlayer(pid); if(!pl) return;
+  pl.x=chalkClamp(pt.x,2,98); pl.y=chalkClamp(pt.y,2,58);
+  var g=document.getElementById('chalkP'+pid);
+  if(g){
+   g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pl.x); c.setAttribute('cy',pl.y); });
+   var t=g.querySelector('text'); if(t){ t.setAttribute('x',pl.x); t.setAttribute('y',pl.y+1.1); }
+  }
+  var rp=document.getElementById('chalkRoute'+pid);
+  if(rp) rp.setAttribute('points',chalkRoutePoints(pl));
+ }
+}
+function chalkUp(){
+ if(!chalkDrag) return;
+ if(chalkDrag.moved){ scheduleSave(); }
+ chalkDrag=null;
+}
+window.addEventListener('pointermove',function(e){ chalkMove(e); });
+window.addEventListener('pointerup',function(){ chalkUp(); });
+/* ----- playback ----- */
+function chalkUpdatePlayBtn(){
+ var b=document.getElementById('chalkPlayBtn'); if(b) b.textContent=chalkPlaying?'Pause':'Play';
+ var s=document.getElementById('chalkScrub'); if(s) s.value=Math.round(chalkT*100);
+ var t=document.getElementById('chalkTime'); if(t){ var p=chalkPlay(); if(p) t.textContent=(chalkT*(p.dur||10)).toFixed(1)+'s / '+(p.dur||10)+'s'; }
+}
+function chalkApplyPositions(){
+ var p=chalkPlay(); if(!p) return;
+ (p.players||[]).forEach(function(pl){
+  var pos=chalkPosAt(chalkPts(pl),chalkT);
+  var g=document.getElementById('chalkP'+pl.id); if(!g) return;
+  g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pos.x); c.setAttribute('cy',pos.y); });
+  var t=g.querySelector('text'); if(t){ t.setAttribute('x',pos.x); t.setAttribute('y',pos.y+1.1); }
+ });
+ var bp=chalkPosAt(chalkBallPts(p),chalkT);
+ var bg=document.getElementById('chalkBall');
+ if(bg){ bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',bp.x); c.setAttribute('cy',bp.y); }); }
+}
+function chalkTick(ts){
+ if(!chalkPlaying) return;
+ var p=chalkPlay();
+ if(!p||!document.getElementById('chalkSvg')){ chalkPause(); return; }
+ var dt=(ts-chalkLast)/1000; chalkLast=ts;
+ chalkT+=dt*chalkSpeed/(p.dur||10);
+ if(chalkT>=1){ chalkT=1; chalkPause(); }
+ chalkApplyPositions(); chalkUpdatePlayBtn();
+ if(chalkPlaying) chalkRaf=requestAnimationFrame(chalkTick);
+}
+function chalkTogglePlay(){
+ var p=chalkPlay(); if(!p) return;
+ if(chalkPlaying){ chalkPause(); return; }
+ if(chalkT>=1) chalkT=0;
+ chalkPlaying=true; chalkLast=performance.now();
+ chalkRaf=requestAnimationFrame(chalkTick);
+ chalkUpdatePlayBtn();
+}
+function chalkPause(){
+ chalkPlaying=false;
+ if(chalkRaf){ cancelAnimationFrame(chalkRaf); chalkRaf=null; }
+ chalkUpdatePlayBtn();
+}
+function chalkScrub(v){
+ chalkPause(); chalkT=chalkClamp(v/100,0,1); chalkApplyPositions(); chalkUpdatePlayBtn();
+}
+function chalkReset(){
+ chalkPause(); chalkT=0; chalkApplyPositions(); chalkUpdatePlayBtn();
+}
+function chalkSetSpeed(v){
+ chalkSpeed=+v||1;
+}
+/* ----- page ----- */
+function chalkListHTML(){
+ var list=S.chalk||[];
+ var h='<div class="card"><div class="pagehead"><h3 style="margin:0">Set plays</h3><button class="primary" onclick="chalkNewPlay()">New play</button></div>';
+ if(!list.length){ h+='<p class="empty-note">No set plays yet. Create your first one — it starts with a full 6v6 set plus a goalie on half a field.</p></div>'; return h; }
+ h+='<ul class="planlist">'+list.map(function(pl,i){
+  return '<li><button class="planrow'+(chalkPlayIdx===i?' active':'')+'" onclick="chalkOpen('+i+')"><span class="planrow-main"><span class="planrow-title">'+esc(pl.name||'Set play')+'</span><span class="planrow-meta">'+esc(pl.created||'')+' · '+((pl.players||[]).length)+' players · '+(pl.dur||10)+'s</span></span><span class="planrow-side"><span class="planrow-dur">'+(pl.dur||10)+'s</span></span></button>'
+  +'<div class="row" style="padding:0 .5rem .5rem"><button class="small" onclick="chalkOpen('+i+')">Open</button><button class="small" onclick="chalkDup('+i+')">Duplicate</button><button class="small danger" onclick="chalkDel('+i+')">Delete</button></div></li>';
+ }).join('')+'</ul></div>';
+ return h;
+}
+function chalkEditorHTML(p){
+ var sel=chalkSelPlayer();
+ var h='<div class="card"><div class="pagehead"><h3 style="margin:0">Play editor</h3><span class="pill">'+((p.players||[]).length)+' players</span></div>'
+ +'<div><label>Play name</label><input id="chalkName" value="'+esc(p.name||'')+'" onchange="chalkRename(this.value)"></div>'
+ +'<div class="grid2"><div><label>Duration (seconds)</label><input type="number" min="1" max="120" step="1" value="'+(p.dur||10)+'" onchange="chalkSetDur(this.value)"></div>'
+ +'<div><label>Saved</label><input value="'+esc(p.created||'')+'" disabled></div></div>'
+ +'<div><label>Notes</label><textarea rows="2" onchange="chalkSetNotes(this.value)">'+esc(p.notes||'')+'</textarea></div>'
+ +'<div style="margin-top:1rem"><div class="chalkfield">'+chalkFieldSVG(p)+'</div>'
+ +'<p class="hint">'+(chalkRouteMode==='player'?'Adding route points for '+(sel?esc(sel.label||chalkTeamName(sel.team)):'')+' — click the field to add a point. Click "Done adding" to stop.'
+  :chalkRouteMode==='ball'?'Adding ball path points — click the field to add a pass or carry point. Click "Done adding" to stop.'
+  :'Drag any player or the ball to move it. Click a player or the ball to select it, then add route points.')+'</p></div>'
+ +'<div class="row" style="margin-top:.75rem"><button id="chalkPlayBtn" class="primary" onclick="chalkTogglePlay()">'+(chalkPlaying?'Pause':'Play')+'</button>'
+ +'<button onclick="chalkReset()">Reset</button>'
+ +'<input id="chalkScrub" type="range" min="0" max="100" step="1" value="'+Math.round(chalkT*100)+'" oninput="chalkScrub(this.value)" style="flex:1;min-width:120px">'
+ +'<span id="chalkTime" style="font-family:ui-monospace,Menlo,monospace;font-size:.875rem;font-weight:600;white-space:nowrap">'+(chalkT*(p.dur||10)).toFixed(1)+'s / '+(p.dur||10)+'s</span>'
+ +'<select id="chalkSpeed" onchange="chalkSetSpeed(this.value)" style="width:auto"><option value="0.5"'+(chalkSpeed===0.5?' selected':'')+'>0.5x</option><option value="1"'+(chalkSpeed===1?' selected':'')+'>1x</option><option value="2"'+(chalkSpeed===2?' selected':'')+'>2x</option></select></div>';
+ +'<div class="row" style="margin-top:.75rem"><span class="hint" style="margin:0">Players:</span>'
+ +(p.players||[]).map(function(pl){ return '<button class="small'+(chalkSel===pl.id?' primary':'')+'" onclick="chalkSelectPlayer('+pl.id+')"><span class="swatch" style="background:'+chalkTeamColor(pl.team)+'"></span>'+esc(pl.label||chalkTeamName(pl.team))+'</button>'; }).join('')
+ +'<button class="small'+(chalkSel==='ball'?' primary':'')+'" onclick="chalkSelectPlayer(\'ball\')">Ball</button></div>';
+ /* selected player / ball editor */
+ if(chalkSel==='ball'){
+  h+='<div class="coachbox"><h4>Ball</h4>'
+  +'<div><label style="margin-top:0">Ball carrier (sets the ball start)</label><select onchange="chalkSetCarrier(this.value)"><option value="">Loose ball</option>'
+  +(p.players||[]).map(function(pl){ return '<option value="'+pl.id+'"'+(p.ball&&p.ball.carrier===pl.id?' selected':'')+'>'+esc(pl.label||chalkTeamName(pl.team))+' — '+chalkTeamName(pl.team)+'</option>'; }).join('')
+  +'</select></div>'
+  +'<div class="row" style="margin-top:.75rem">'
+  +(chalkRouteMode==='ball'?'<button class="primary" onclick="chalkSetRouteMode(\'ball\')">Done adding</button>':'<button onclick="chalkSetRouteMode(\'ball\')">Add ball path points</button>')
+  +'<button onclick="chalkClearBallPath()">Clear ball path</button></div>'
+  +'<p class="hint">Ball path: '+((p.ball.path||[]).length)+' point'+((p.ball.path||[]).length===1?'':'s')+' — the solid line the ball follows when you press Play.</p></div>';
+ } else if(sel){
+  h+='<div class="coachbox"><h4>Selected player</h4>'
+  +'<div class="grid2"><div><label style="margin-top:0">Label / number</label><input value="'+esc(sel.label||'')+'" onchange="chalkSetLabel(this.value)"></div>'
+  +'<div><label style="margin-top:0">Team</label><select onchange="chalkSetTeam(this.value)">'
+  +['A','M','D','G'].map(function(t){ return '<option value="'+t+'"'+(sel.team===t?' selected':'')+'>'+chalkTeamName(t)+'</option>'; }).join('')
+  +'</select></div></div>'
+  +'<div class="row" style="margin-top:.75rem">'
+  +(chalkRouteMode==='player'?'<button class="primary" onclick="chalkSetRouteMode(\'player\')">Done adding</button>':'<button onclick="chalkSetRouteMode(\'player\')">Add route points</button>')
+  +'<button onclick="chalkClearRoute()">Clear route</button>'
+  +'<button class="danger" onclick="chalkRemovePlayer()">Remove player</button></div>'
+  +'<p class="hint">Route: '+((sel.route||[]).length)+' point'+((sel.route||[]).length===1?'':'s')+' — the dashed line this player runs when you press Play.</p></div>';
+ } else {
+  h+='<p class="hint">Select a player or the ball on the field to edit it, add routes, or remove it.</p>';
+ }
+ h+='<div class="card" style="margin:.75rem 0 0"><div class="row"><select id="chalkAddTeam" style="width:auto"><option value="A">Attack</option><option value="M">Midfield</option><option value="D">Defense</option><option value="G">Goalie</option></select><button onclick="chalkAddPlayer()">Add player</button></div>'
+ +'<p class="hint">Offense is red, defense is blue, the goalie is gold. Every player can be dragged, relabeled, re-teamed, routed, or removed.</p></div>';
+ h+='</div>';
+ return h;
+}
+function renderChalk(){
+ if(!S.chalk) S.chalk=[];
+ if(chalkPlayIdx>=0&&!S.chalk[chalkPlayIdx]){ chalkPlayIdx=-1; chalkSel=null; chalkRouteMode=null; }
+ var p=chalkPlay();
+ var h='<div class="pt6"><div class="pagehead"><h2>Chalk Talk</h2><button class="primary" onclick="chalkNewPlay()">New play</button></div>'
+ +'<p class="pagesub">Build animated set plays on half a field — place the players, draw their routes and the ball path, then press Play.</p>'
+ +'<div class="editor-grid"><div>'+(p?chalkEditorHTML(p):'<div class="card"><p class="empty-note">No play open. Create a new play or open one from the list to start drawing.</p></div>')+'</div><div>'+chalkListHTML()+'</div></div></div>';
+ app.innerHTML=h;
+}
+
 /* ---------- SERVER SYNC (one shared state for all approved accounts) ---------- */
-var SYNC_KEYS=['cats','drills','roster','former','depth','recruits','rankings','plans','events','sessions','template','logo','teamColor','rankClass'];
+var SYNC_KEYS=['cats','drills','roster','former','depth','recruits','rankings','plans','events','sessions','chalk','template','logo','teamColor','rankClass'];
 var syncReady=false, syncTimer=null, syncRetry=0, syncPendingSave=false;
 function syncSnapshot(){
  var out={};
@@ -1033,6 +1392,10 @@ function syncApply(d){
  var maxId=0;
  ['drills','roster','former','recruits'].forEach(function(k){
   (S[k]||[]).forEach(function(x){ if(x&&typeof x.id==='number'&&x.id>maxId) maxId=x.id; });
+ });
+ (S.chalk||[]).forEach(function(pl){
+  if(pl&&typeof pl.id==='number'&&pl.id>maxId) maxId=pl.id;
+  (pl.players||[]).forEach(function(x){ if(x&&typeof x.id==='number'&&x.id>maxId) maxId=x.id; });
  });
  if(maxId>=uid) uid=maxId+1;
  return ok;
