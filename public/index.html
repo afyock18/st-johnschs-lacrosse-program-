@@ -1276,7 +1276,7 @@ function chalkEditorHTML(p){
  +'<button onclick="chalkReset()">Reset</button>'
  +'<input id="chalkScrub" type="range" min="0" max="100" step="1" value="'+Math.round(chalkT*100)+'" oninput="chalkScrub(this.value)" style="flex:1;min-width:120px">'
  +'<span id="chalkTime" style="font-family:ui-monospace,Menlo,monospace;font-size:.875rem;font-weight:600;white-space:nowrap">'+(chalkT*(p.dur||10)).toFixed(1)+'s / '+(p.dur||10)+'s</span>'
- +'<select id="chalkSpeed" onchange="chalkSetSpeed(this.value)" style="width:auto"><option value="0.5"'+(chalkSpeed===0.5?' selected':'')+'>0.5x</option><option value="1"'+(chalkSpeed===1?' selected':'')+'>1x</option><option value="2"'+(chalkSpeed===2?' selected':'')+'>2x</option></select></div>';
+ +'<select id="chalkSpeed" onchange="chalkSetSpeed(this.value)" style="width:auto"><option value="0.5"'+(chalkSpeed===0.5?' selected':'')+'>0.5x</option><option value="1"'+(chalkSpeed===1?' selected':'')+'>1x</option><option value="2"'+(chalkSpeed===2?' selected':'')+'>2x</option></select></div>'
  +'<div class="row" style="margin-top:.75rem"><span class="hint" style="margin:0">Players:</span>'
  +(p.players||[]).map(function(pl){ return '<button class="small'+(chalkSel===pl.id?' primary':'')+'" onclick="chalkSelectPlayer('+pl.id+')"><span class="swatch" style="background:'+chalkTeamColor(pl.team)+'"></span>'+esc(pl.label||chalkTeamName(pl.team))+'</button>'; }).join('')
  +'<button class="small'+(chalkSel==='ball'?' primary':'')+'" onclick="chalkSelectPlayer(\'ball\')">Ball</button></div>';
