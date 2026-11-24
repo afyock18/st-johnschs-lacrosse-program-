@@ -272,6 +272,9 @@ input[type=color]{width:3.5rem;height:2.5rem;padding:.25rem;cursor:pointer}
 @media(max-width:640px){.cal .day{min-height:4rem;font-size:.68rem}h1{font-size:1.35rem}}
 .chalkfield{width:100%;aspect-ratio:5/3;display:block}
 .chalksvg{width:100%;height:100%;display:block;touch-action:none;user-select:none;-webkit-user-select:none}
+.chalkroute{margin-top:.5rem;border-top:1px solid var(--line);padding-top:.5rem}
+.chalkroute-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;padding:.3rem 0;border-bottom:1px dashed var(--line);font-size:.85rem}
+.chalkroute-row input[type=number]{width:4.4rem;padding:.3rem .5rem}
 @media print{body>*{display:none}}
 </style>
 </head>
@@ -963,7 +966,7 @@ function renderCalendar(){
 function saveEvent(){var obj={type:document.getElementById('eType').value,title:document.getElementById('eTitle').value.trim()||'Event',date:document.getElementById('eDate').value,start:document.getElementById('eStart').value,end:document.getElementById('eEnd').value,location:document.getElementById('eLoc').value,opp:document.getElementById('eOpp').value,notes:document.getElementById('eNotes').value};if(editEvIdx>=0){S.events[editEvIdx]=obj;editEvIdx=-1;toast('Event updated')}else{S.events.push(obj);toast('Event added')}render()}
 function openPlanViewer(i){var p=S.plans[i];if(!p)return;window._sheetPlanIdx=i;openModal('<div class="card"><b>View only</b> — read the plan sheet here; tap "Download PDF" below if you want a PDF copy.<br>'+templatePicker()+'</div><div id="viewerSheet">'+sheetHTML(p)+'</div><div class="row"><button class="primary" onclick="downloadPDF(sheetHTML(S.plans['+i+']))">Download PDF</button><button onclick="closeModal();S.page=\'plans\';S.sub=\'your\';editPlanIdx='+i+';render()">Edit plan</button><button onclick="document.getElementById(\'viewerSheet\').innerHTML=sheetHTML(S.plans['+i+'])">Refresh sheet for template</button></div>')}
 /* ---------- CHALK TALK ---------- */
-var chalkPlayIdx=-1, chalkSel=null, chalkRouteMode=null, chalkT=0, chalkPlaying=false, chalkSpeed=1, chalkRaf=null, chalkLast=0, chalkDrag=null;
+var chalkPlayIdx=-1, chalkSel=null, chalkRouteMode=null, chalkRouteSel=-1, chalkT=0, chalkPlaying=false, chalkSpeed=1, chalkRaf=null, chalkLast=0, chalkDrag=null;
 var CHALK_W=100, CHALK_H=60;
 function chalkPlay(){ return (chalkPlayIdx>=0&&S.chalk&&S.chalk[chalkPlayIdx])?S.chalk[chalkPlayIdx]:null; }
 function chalkClamp(v,a,b){ v=+v||0; return v<a?a:(v>b?b:v); }
@@ -988,7 +991,23 @@ function chalkFindPlayer(pid){ var p=chalkPlay(); if(!p) return null; for(var i=
 function chalkTeamColor(t){ if(t==='D') return '#2456a6'; if(t==='G') return '#c8a24a'; return (S.teamColor&&/^#[0-9a-fA-F]{6}$/.test(S.teamColor))?S.teamColor:'#a6192e'; }
 function chalkTeamName(t){ return t==='A'?'Attack':(t==='M'?'Midfield':(t==='D'?'Defense':'Goalie')); }
 function chalkNewPlayer(team,x,y,label){ return {id:id(),team:team,label:label||'',x:chalkClamp(x,CHALK_PM,100-CHALK_PM),y:chalkClamp(y,CHALK_PM_TOP,60-CHALK_PM),route:[]}; }
-function chalkDefaultPlay(){
+function chalkDefaultPlay(kind){
+ kind=kind||'full';
+ if(kind==='offense'){
+  var ps=[
+   chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,41,'A2'),chalkNewPlayer('A',64,54,'A3'),
+   chalkNewPlayer('M',28,18,'M1'),chalkNewPlayer('M',50,12,'M2'),chalkNewPlayer('M',72,18,'M3')
+  ];
+  return {id:id(),name:'New offensive play',notes:'',dur:10,created:todayStr(),players:ps,ball:{x:ps[1].x,y:ps[1].y,carrier:ps[1].id,path:[]}};
+ }
+ if(kind==='defense'){
+  var ps=[
+   chalkNewPlayer('D',28,42,'D1'),chalkNewPlayer('D',40,48,'D2'),chalkNewPlayer('D',50,48,'D3'),
+   chalkNewPlayer('D',60,48,'D4'),chalkNewPlayer('D',72,42,'D5'),chalkNewPlayer('D',50,34,'D6'),
+   chalkNewPlayer('G',50,59,'G1')
+  ];
+  return {id:id(),name:'New defensive play',notes:'',dur:10,created:todayStr(),players:ps,ball:{x:50,y:20,carrier:null,path:[]}};
+ }
  var ps=[
   chalkNewPlayer('A',36,54,'A1'),chalkNewPlayer('A',50,41,'A2'),chalkNewPlayer('A',64,54,'A3'),
   chalkNewPlayer('M',28,18,'M1'),chalkNewPlayer('M',50,12,'M2'),chalkNewPlayer('M',72,18,'M3'),
@@ -998,15 +1017,16 @@ function chalkDefaultPlay(){
  ];
  return {id:id(),name:'New set play',notes:'',dur:10,created:todayStr(),players:ps,ball:{x:ps[1].x,y:ps[1].y,carrier:ps[1].id,path:[]}};
 }
-function chalkNewPlay(){
+function chalkNewPlay(kind){
  if(!S.chalk) S.chalk=[];
- var pl=chalkDefaultPlay(); S.chalk.push(pl);
- chalkPlayIdx=S.chalk.length-1; chalkSel=null; chalkRouteMode=null; chalkReset();
- render(); toast('New play created');
+ if(kind&&typeof kind!=='string') kind='full';
+ var pl=chalkDefaultPlay(kind||'full'); S.chalk.push(pl);
+ chalkPlayIdx=S.chalk.length-1; chalkSel=null; chalkRouteMode=null; chalkRouteSel=-1; chalkReset();
+ render(); toast(kind==='offense'?'New offensive play created':(kind==='defense'?'New defensive play created':'New play created'));
 }
 function chalkOpen(i){
  if(!S.chalk||!S.chalk[i]) return;
- chalkPlayIdx=i; chalkSel=null; chalkRouteMode=null; chalkReset(); render();
+ chalkPlayIdx=i; chalkSel=null; chalkRouteMode=null; chalkRouteSel=-1; chalkReset(); render();
 }
 function chalkDup(i){
  var p=S.chalk&&S.chalk[i]; if(!p) return;
@@ -1015,14 +1035,14 @@ function chalkDup(i){
  c.id=id(); c.name=(p.name||'Set play')+' copy'; c.created=todayStr();
  (c.players||[]).forEach(function(pl){ var nid=id(); remap[pl.id]=nid; pl.id=nid; });
  if(c.ball&&c.ball.carrier&&remap[c.ball.carrier]) c.ball.carrier=remap[c.ball.carrier];
- S.chalk.push(c); chalkPlayIdx=S.chalk.length-1; chalkSel=null; chalkRouteMode=null; chalkReset();
+ S.chalk.push(c); chalkPlayIdx=S.chalk.length-1; chalkSel=null; chalkRouteMode=null; chalkRouteSel=-1; chalkReset();
  scheduleSave(); render(); toast('Play duplicated');
 }
 function chalkDel(i){
  var p=S.chalk&&S.chalk[i]; if(!p) return;
  askConfirm('Delete play "'+(p.name||'Set play')+'"?',function(){
   S.chalk.splice(i,1);
-  if(chalkPlayIdx===i){ chalkPlayIdx=-1; chalkSel=null; chalkRouteMode=null; chalkReset(); }
+  if(chalkPlayIdx===i){ chalkPlayIdx=-1; chalkSel=null; chalkRouteMode=null; chalkRouteSel=-1; chalkReset(); }
   else if(chalkPlayIdx>i) chalkPlayIdx--;
   scheduleSave(); render(); toast('Play deleted');
  });
@@ -1073,24 +1093,28 @@ function chalkRemovePlayer(){
  askConfirm('Remove player "'+(pl.label||chalkTeamName(pl.team))+'" from this play?',function(){
   if(p.ball&&p.ball.carrier===pl.id){ p.ball.carrier=null; }
   p.players=p.players.filter(function(x){return x.id!==pl.id});
-  chalkSel=null; chalkRouteMode=null; scheduleSave(); render(); toast('Player removed');
+  chalkSel=null; chalkRouteMode=null; chalkRouteSel=-1; scheduleSave(); render(); toast('Player removed');
  });
 }
 function chalkSetRouteMode(m){
  chalkRouteMode=(chalkRouteMode===m)?null:m;
+ if(chalkRouteMode){
+  var route=chalkRouteForSel();
+  chalkRouteSel=(route&&route.length)?route.length-1:-1;
+ } else { chalkRouteSel=-1; }
  render();
 }
 function chalkSelectPlayer(pid){
- chalkSel=pid;
+ chalkSel=pid; chalkRouteSel=-1;
  render();
 }
 function chalkClearRoute(){
  var pl=chalkSelPlayer(); if(!pl) return;
- pl.route=[]; scheduleSave(); render(); toast('Route cleared');
+ pl.route=[]; chalkRouteSel=-1; scheduleSave(); render(); toast('Route cleared');
 }
 function chalkClearBallPath(){
  var p=chalkPlay(); if(!p) return;
- p.ball.path=[]; scheduleSave(); render(); toast('Ball path cleared');
+ p.ball.path=[]; chalkRouteSel=-1; scheduleSave(); render(); toast('Ball path cleared');
 }
 function chalkSetCarrier(v){
  var p=chalkPlay(); if(!p) return;
@@ -1098,6 +1122,71 @@ function chalkSetCarrier(v){
  p.ball.carrier=pid;
  if(pid){ var pl=chalkFindPlayer(pid); if(pl){ p.ball.x=pl.x; p.ball.y=pl.y; } }
  scheduleSave(); render();
+}
+/* ----- route timing: each waypoint carries secs, the seconds to travel
+   from the previous point to this one. That is the timer on each arrow:
+   a short time is a fast leg, a long time is a slow leg. Legacy waypoints
+   with no secs share the play duration equally, so old plays still finish
+   at the end of the play, as they did before. */
+function chalkLegSecs(route,dur){
+ dur=dur||10;
+ if(!route||!route.length) return [];
+ var hasAny=false, hasAll=true;
+ route.forEach(function(w){ if(w&&isFinite(+w.secs)&&+w.secs>0) hasAny=true; else hasAll=false; });
+ if(!hasAny) return route.map(function(){ return dur/route.length; });
+ if(hasAll) return route.map(function(w){ return Math.max(0.1,Math.min(120,+w.secs)); });
+ return route.map(function(w){ return (w&&isFinite(+w.secs)&&+w.secs>0)?Math.max(0.1,Math.min(120,+w.secs)):1.5; });
+}
+function chalkRouteTotal(route,dur){ var s=0; chalkLegSecs(route,dur).forEach(function(v){ s+=v; }); return s; }
+function chalkPosAtTimed(pts,legSecs,elapsed){
+ if(!pts||!pts.length) return {x:50,y:30};
+ if(pts.length<2||!legSecs||!legSecs.length) return {x:pts[0].x,y:pts[0].y};
+ var total=0; legSecs.forEach(function(v){ total+=v; });
+ if(elapsed<=0) return {x:pts[0].x,y:pts[0].y};
+ if(elapsed>=total){ var l=pts[pts.length-1]; return {x:l.x,y:l.y}; }
+ var tt=elapsed;
+ for(var i=1;i<pts.length;i++){
+  var s=legSecs[i-1]||0;
+  if(tt<=s||i===pts.length-1){ var f=s?tt/s:0; return {x:pts[i-1].x+(pts[i].x-pts[i-1].x)*f,y:pts[i-1].y+(pts[i].y-pts[i-1].y)*f}; }
+  tt-=s;
+ }
+ var l2=pts[pts.length-1]; return {x:l2.x,y:l2.y};
+}
+function chalkPlayerPos(pl,p,tFrac){ return chalkPosAtTimed(chalkPts(pl),chalkLegSecs(pl.route,p.dur||10),(tFrac||0)*(p.dur||10)); }
+function chalkBallPos(p,tFrac){ return chalkPosAtTimed(chalkBallPts(p),chalkLegSecs(p.ball.path,p.dur||10),(tFrac||0)*(p.dur||10)); }
+function chalkRouteForSel(){
+ if(chalkSel==='ball'){ var p=chalkPlay(); return (p&&p.ball)?p.ball.path:null; }
+ var pl=chalkSelPlayer(); return pl?pl.route:null;
+}
+function chalkSelectRoutePoint(i){ chalkRouteSel=i; render(); }
+function chalkSetLegSecs(i,v){
+ var route=chalkRouteForSel(); if(!route||!route[i]) return;
+ route[i].secs=Math.max(0.5,Math.min(60,Math.round((+v||2)*2)/2));
+ scheduleSave(); render();
+}
+function chalkDeleteRoutePoint(i){
+ var route=chalkRouteForSel(); if(!route||!route[i]) return;
+ route.splice(i,1);
+ if(chalkRouteSel>=route.length) chalkRouteSel=route.length-1;
+ scheduleSave(); render(); toast('Route point removed');
+}
+function chalkRouteListHTML(route,dur,isBall,start){
+ if(!route||!route.length) return '';
+ var secs=chalkLegSecs(route,dur||10), total=chalkRouteTotal(route,dur||10);
+ var h='<div class="chalkroute"><b>'+(isBall?'Ball path timers':'Route timers')+'</b> &mdash; total '+total.toFixed(1)+'s'+(total>(dur||10)?' &mdash; longer than the '+(dur||10)+'s play, so it will not finish before the play ends':'')+'<br><span class="hint" style="margin:0">Tap an arrow below (or its dot on the field) to select it, drag the dot to move it, and set how many seconds that arrow takes. Shorter = faster.</span></div>';
+ route.forEach(function(w,i){
+  var prev=i===0?start:route[i-1];
+  var dist=prev?Math.hypot(w.x-prev.x,w.y-prev.y):0;
+  h+='<div class="chalkroute-row"><button class="small'+(chalkRouteSel===i?' primary':'')+'" onclick="chalkSelectRoutePoint('+i+')">Arrow '+(i+1)+'</button><span>('+w.x.toFixed(1)+', '+w.y.toFixed(1)+')</span><span>'+dist.toFixed(1)+' units in</span><input type="number" min="0.5" max="60" step="0.5" value="'+secs[i].toFixed(1)+'" onchange="chalkSetLegSecs('+i+',this.value)" aria-label="Seconds for arrow '+(i+1)+'"><span>s</span><button class="small danger" onclick="chalkDeleteRoutePoint('+i+')">Remove</button></div>';
+ });
+ return h;
+}
+function chalkLegLabelHTML(a,b,secs,col){
+ var mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+ var txt=(+secs).toFixed(1)+'s';
+ var w=txt.length*1.35+1.6;
+ var x=chalkClamp(mx,w/2+0.5,100-w/2-0.5), y=chalkClamp(my-2.4,2.4,58);
+ return '<g><rect x="'+(x-w/2).toFixed(1)+'" y="'+(y-1.6).toFixed(1)+'" width="'+w.toFixed(1)+'" height="3.2" rx="1.6" fill="#fff" fill-opacity="0.92" stroke="'+col+'" stroke-width="0.25"/><text x="'+x.toFixed(1)+'" y="'+(y+0.9).toFixed(1)+'" text-anchor="middle" font-size="2.1" font-weight="700" fill="#1c1a17">'+txt+'</text></g>';
 }
 /* ----- field geometry + animation ----- */
 function chalkPts(pl){ var pts=[{x:pl.x,y:pl.y}]; (pl.route||[]).forEach(function(w){pts.push({x:w.x,y:w.y})}); return pts; }
@@ -1135,23 +1224,43 @@ function chalkFieldSVG(p){
  h+='<rect x="45" y="58.2" width="10" height="1.8" fill="currentColor" stroke="none"/>';
  h+='<text x="50" y="3.2" text-anchor="middle" font-size="2.6" fill="currentColor" opacity="0.6">MIDFIELD</text>';
  h+='<text x="97" y="59" text-anchor="end" font-size="2.4" fill="currentColor" opacity="0.6">GOAL</text>';
- /* routes */
+ /* routes: each leg is an arrow, with its timer label at the leg midpoint.
+    Every waypoint dot is draggable (see chalkWpDown) and clickable to
+    select it, so the arrow you just drew can be adjusted before you
+    draw the next one. */
  (p.players||[]).forEach(function(pl){
   var pts=chalkPts(pl);
   if(pts.length>1){
    var col=chalkTeamColor(pl.team), mk=pl.team==='D'?'chArrD':'chArrO';
+   var secs=chalkLegSecs(pl.route,p.dur||10);
    h+='<polyline id="chalkRoute'+pl.id+'" points="'+chalkRoutePoints(pl)+'" fill="none" stroke="'+col+'" stroke-width="0.55" stroke-dasharray="2 1.2" marker-end="url(#'+mk+')" opacity="0.9"/>';
-   pts.slice(1).forEach(function(w){ h+='<circle cx="'+w.x+'" cy="'+w.y+'" r="0.9" fill="'+col+'" stroke="#fff" stroke-width="0.3"/>'; });
+   for(var i=1;i<pts.length;i++) h+=chalkLegLabelHTML(pts[i-1],pts[i],secs[i-1],col);
+   pts.slice(1).forEach(function(w,wi){
+    var isSel=(chalkSel===pl.id&&chalkRouteSel===wi);
+    h+='<g data-wp="player:'+pl.id+':'+wi+'" onpointerdown="chalkWpDown(event,'+pl.id+','+wi+')" style="cursor:grab;touch-action:none">';
+    if(isSel) h+='<circle data-wp="player:'+pl.id+':'+wi+'" cx="'+w.x+'" cy="'+w.y+'" r="1.9" fill="none" stroke="#c8a24a" stroke-width="0.7"/>';
+    h+='<circle data-wp="player:'+pl.id+':'+wi+'" cx="'+w.x+'" cy="'+w.y+'" r="2.4" fill="transparent" stroke="none"/>';
+    h+='<circle data-wp="player:'+pl.id+':'+wi+'" cx="'+w.x+'" cy="'+w.y+'" r="0.9" fill="'+col+'" stroke="#fff" stroke-width="0.3"/></g>';
+   });
   }
  });
  var bpts=chalkBallPts(p);
  if(bpts.length>1){
+  var bsecs=chalkLegSecs(p.ball.path,p.dur||10);
   h+='<polyline id="chalkBallPath" points="'+bpts.map(function(q){return q.x.toFixed(1)+','+q.y.toFixed(1)}).join(' ')+'" fill="none" stroke="#1c1a17" stroke-width="0.6" marker-end="url(#chArrB)"/>';
-  bpts.slice(1).forEach(function(w){ h+='<circle cx="'+w.x+'" cy="'+w.y+'" r="0.9" fill="#1c1a17" stroke="#fff" stroke-width="0.3"/>'; });
+  for(var bi=1;bi<bpts.length;bi++) h+=chalkLegLabelHTML(bpts[bi-1],bpts[bi],bsecs[bi-1],'#1c1a17');
+  bpts.slice(1).forEach(function(w,wi){
+   var isSel=(chalkSel==='ball'&&chalkRouteSel===wi);
+   h+='<g data-wp="ball:'+wi+'" onpointerdown="chalkWpDown(event,\'ball\','+wi+')" style="cursor:grab;touch-action:none">';
+   if(isSel) h+='<circle data-wp="ball:'+wi+'" cx="'+w.x+'" cy="'+w.y+'" r="1.9" fill="none" stroke="#c8a24a" stroke-width="0.7"/>';
+   h+='<circle data-wp="ball:'+wi+'" cx="'+w.x+'" cy="'+w.y+'" r="2.4" fill="transparent" stroke="none"/>';
+   h+='<circle data-wp="ball:'+wi+'" cx="'+w.x+'" cy="'+w.y+'" r="0.9" fill="#1c1a17" stroke="#fff" stroke-width="0.3"/></g>';
+  });
  }
- /* players at current playback position */
+ /* players at current playback position (timed per leg, so a leg with a
+    short timer moves faster than one with a long timer) */
  (p.players||[]).forEach(function(pl){
-  var pos=chalkPosAt(chalkPts(pl),chalkT), col=chalkTeamColor(pl.team), sel=(chalkSel===pl.id);
+  var pos=chalkPlayerPos(pl,p,chalkT), col=chalkTeamColor(pl.team), sel=(chalkSel===pl.id);
   var txt=pl.label||chalkTeamName(pl.team).charAt(0);
   h+='<g id="chalkP'+pl.id+'" data-pid="'+pl.id+'" onpointerdown="chalkDown(event,'+pl.id+')" style="cursor:grab;touch-action:none">';
   if(sel) h+='<circle cx="'+pos.x+'" cy="'+pos.y+'" r="3.9" fill="none" stroke="#c8a24a" stroke-width="0.8"/>';
@@ -1159,7 +1268,7 @@ function chalkFieldSVG(p){
   h+='<text x="'+chalkLabelX(pos.x,txt)+'" y="'+(pos.y+1.1)+'" text-anchor="middle" font-size="3.1" font-weight="700" fill="'+(pl.team==='G'?'#1c1a17':'#fff')+'">'+esc(txt)+'</text></g>';
  });
  /* ball (drawn offset from its carrier/path so the carrier's label stays readable) */
- var bp=chalkPosAt(bpts,chalkT); bp=chalkBallDrawPos(bp.x,bp.y);
+ var bp=chalkBallPos(p,chalkT); bp=chalkBallDrawPos(bp.x,bp.y);
  h+='<g id="chalkBall" data-ball="1" onpointerdown="chalkDown(event,\'ball\')" style="cursor:grab;touch-action:none">';
  if(chalkSel==='ball') h+='<circle cx="'+bp.x+'" cy="'+bp.y+'" r="2.6" fill="none" stroke="#c8a24a" stroke-width="0.8"/>';
  h+='<circle cx="'+bp.x+'" cy="'+bp.y+'" r="1.6" fill="#fff" stroke="#1c1a17" stroke-width="0.6"/></g>';
@@ -1173,22 +1282,52 @@ function chalkSvgPoint(e){
 }
 function chalkSvgClick(e){
  var p=chalkPlay(); if(!p||!chalkRouteMode) return;
- var t=e.target;
- if(t&&t.getAttribute&&(t.getAttribute('data-pid')||t.getAttribute('data-ball'))) return;
+ var tgt=e.target;
+ if(tgt&&tgt.getAttribute){
+  if(tgt.getAttribute('data-pid')||tgt.getAttribute('data-ball')) return;
+  var wp=tgt.getAttribute('data-wp');
+  if(wp){
+   /* Clicking a waypoint dot selects it for adjusting instead of adding
+      a new point — this is how the arrow you just drew gets adjusted
+      before you draw the next one. */
+   var parts=wp.split(':');
+   if(parts[0]==='ball'){ chalkSel='ball'; chalkRouteSel=+parts[1]; }
+   else { chalkSel=+parts[1]; chalkRouteSel=+parts[2]; }
+   render(); return;
+  }
+ }
  var pt=chalkSvgPoint(e); if(!pt) return;
  pt={x:chalkClamp(Math.round(pt.x*10)/10,1.2,98.8),y:chalkClamp(Math.round(pt.y*10)/10,1.2,58.8)};
  if(chalkRouteMode==='player'){
   var pl=chalkSelPlayer(); if(!pl) return;
-  pl.route.push(pt);
+  if(!pl.route) pl.route=[];
+  /* A new point starts at 2.0s for its leg and is selected at once, so
+     it can be dragged to a better spot (or its timer changed below)
+     before the next point is added. */
+  pl.route.push({x:pt.x,y:pt.y,secs:2});
+  chalkRouteSel=pl.route.length-1;
  } else if(chalkRouteMode==='ball'){
-  p.ball.path.push(pt);
+  if(!p.ball.path) p.ball.path=[];
+  p.ball.path.push({x:pt.x,y:pt.y,secs:2});
+  chalkRouteSel=p.ball.path.length-1;
  }
  scheduleSave(); render();
+}
+function chalkWpDown(e,pid,idx){
+ var p=chalkPlay(); if(!p) return;
+ e.preventDefault(); e.stopPropagation();
+ chalkPause();
+ chalkSel=pid; chalkRouteSel=idx;
+ var route=(pid==='ball')?(p.ball.path||[]):((chalkFindPlayer(pid)||{route:[]}).route||[]);
+ var w=route&&route[idx]; if(!w) return;
+ var pt=chalkSvgPoint(e);
+ chalkDrag={kind:pid==='ball'?'ballwp':'wp',pid:pid,idx:idx,start:pt,moved:false,gx:pt?pt.x-w.x:0,gy:pt?pt.y-w.y:0};
+ render();
 }
 function chalkDown(e,pid){
  var p=chalkPlay(); if(!p) return;
  e.preventDefault(); e.stopPropagation();
- chalkPause(); chalkT=0; chalkRouteMode=null;
+ chalkPause(); chalkT=0; chalkRouteMode=null; chalkRouteSel=-1;
  chalkSel=pid;
  var pt=chalkSvgPoint(e);
  /* Grab offset: where the pointer is relative to the thing's logical center,
@@ -1205,6 +1344,23 @@ function chalkMove(e){
  var p=chalkPlay(); if(!p) return;
  var pt=chalkSvgPoint(e); if(!pt) return;
  if(chalkDrag.start&&Math.hypot(pt.x-chalkDrag.start.x,pt.y-chalkDrag.start.y)>0.8) chalkDrag.moved=true;
+ /* Dragging a route waypoint: move that point, and redraw its arrow live. */
+ if(chalkDrag.kind==='wp'||chalkDrag.kind==='ballwp'){
+  var route=(chalkDrag.kind==='ballwp')?(p.ball.path||[]):((chalkFindPlayer(chalkDrag.pid)||{route:[]}).route||[]);
+  var w=route&&route[chalkDrag.idx]; if(!w) return;
+  w.x=chalkClamp(pt.x-(chalkDrag.gx||0),1.2,98.8); w.y=chalkClamp(pt.y-(chalkDrag.gy||0),1.2,58.8);
+  var rp=(chalkDrag.kind==='ballwp')?document.getElementById('chalkBallPath'):document.getElementById('chalkRoute'+chalkDrag.pid);
+  if(chalkDrag.kind==='ballwp'){ if(rp) rp.setAttribute('points',chalkBallPts(p).map(function(q){return q.x.toFixed(1)+','+q.y.toFixed(1)}).join(' ')); }
+  else { var _pl=chalkFindPlayer(chalkDrag.pid); if(rp&&_pl) rp.setAttribute('points',chalkRoutePoints(_pl)); }
+  /* Move the dot itself live; the timer label snaps to the new midpoint on release (chalkUp re-renders). */
+  var dots=document.querySelectorAll('[data-wp]');
+  dots.forEach(function(d){
+   var a=d.getAttribute('data-wp');
+   var want=(chalkDrag.kind==='ballwp')?('ball:'+chalkDrag.idx):('player:'+chalkDrag.pid+':'+chalkDrag.idx);
+   if(a===want){ d.setAttribute('cx',w.x); d.setAttribute('cy',w.y); }
+  });
+  return;
+ }
  var pid=chalkDrag.pid;
  /* Logical position follows the pointer minus the grab offset, so the thing
     being dragged stays under the pointer instead of snapping its center to it. */
@@ -1221,16 +1377,21 @@ function chalkMove(e){
   var g=document.getElementById('chalkP'+pid);
   if(g){
    g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pl.x); c.setAttribute('cy',pl.y); });
-   var t=g.querySelector('text'); if(t){ t.setAttribute('x',chalkLabelX(pl.x,pl.label||chalkTeamName(pl.team).charAt(0))); t.setAttribute('y',pl.y+1.1); }
+   var tt=g.querySelector('text'); if(tt){ tt.setAttribute('x',chalkLabelX(pl.x,pl.label||chalkTeamName(pl.team).charAt(0))); tt.setAttribute('y',pl.y+1.1); }
   }
-  var rp=document.getElementById('chalkRoute'+pid);
-  if(rp) rp.setAttribute('points',chalkRoutePoints(pl));
+  var rp2=document.getElementById('chalkRoute'+pid);
+  if(rp2) rp2.setAttribute('points',chalkRoutePoints(pl));
  }
 }
 function chalkUp(){
  if(!chalkDrag) return;
- if(chalkDrag.moved){ scheduleSave(); }
+ var wasWp=(chalkDrag.kind==='wp'||chalkDrag.kind==='ballwp');
+ var moved=chalkDrag.moved;
  chalkDrag=null;
+ if(moved){ scheduleSave(); }
+ /* After a waypoint drag the timer labels need a fresh render so they sit
+    on the moved arrow's new midpoint. */
+ if(wasWp&&moved) render();
 }
 window.addEventListener('pointermove',function(e){ chalkMove(e); });
 window.addEventListener('pointerup',function(){ chalkUp(); });
@@ -1243,12 +1404,12 @@ function chalkUpdatePlayBtn(){
 function chalkApplyPositions(){
  var p=chalkPlay(); if(!p) return;
  (p.players||[]).forEach(function(pl){
-  var pos=chalkPosAt(chalkPts(pl),chalkT);
+  var pos=chalkPlayerPos(pl,p,chalkT);
   var g=document.getElementById('chalkP'+pl.id); if(!g) return;
   g.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',pos.x); c.setAttribute('cy',pos.y); });
-  var t=g.querySelector('text'); if(t){ t.setAttribute('x',chalkLabelX(pos.x,pl.label||chalkTeamName(pl.team).charAt(0))); t.setAttribute('y',pos.y+1.1); }
+  var tt=g.querySelector('text'); if(tt){ tt.setAttribute('x',chalkLabelX(pos.x,pl.label||chalkTeamName(pl.team).charAt(0))); tt.setAttribute('y',pos.y+1.1); }
  });
- var bp=chalkPosAt(chalkBallPts(p),chalkT);
+ var bp=chalkBallPos(p,chalkT);
  var bg=document.getElementById('chalkBall');
  if(bg){ var dp=chalkBallDrawPos(bp.x,bp.y); bg.querySelectorAll('circle').forEach(function(c){ c.setAttribute('cx',dp.x); c.setAttribute('cy',dp.y); }); }
 }
@@ -1287,10 +1448,10 @@ function chalkSetSpeed(v){
 /* ----- page ----- */
 function chalkListHTML(){
  var list=S.chalk||[];
- var h='<div class="card"><div class="pagehead"><h3 style="margin:0">Set plays</h3><button class="primary" onclick="chalkNewPlay()">New play</button></div>';
- if(!list.length){ h+='<p class="empty-note">No set plays yet. Create your first one — it starts with a full 6v6 set plus a goalie on half a field.</p></div>'; return h; }
+ var h='<div class="card"><div class="pagehead"><h3 style="margin:0">Set plays</h3><span class="row" style="margin:0"><select id="chalkNewKindList" style="width:auto"><option value="full">Full 6v6</option><option value="offense">Offense only</option><option value="defense">Defense only</option></select><button class="primary" onclick="chalkNewPlay(document.getElementById(\'chalkNewKindList\').value)">New play</button></span></div>';
+ if(!list.length){ h+='<p class="empty-note">No set plays yet. Pick a starting lineup above &mdash; full 6v6, offense only (attack + midfield), or defense only (defense + goalie) &mdash; then create your first one.</p></div>'; return h; }
  h+='<ul class="planlist">'+list.map(function(pl,i){
-  return '<li><button class="planrow'+(chalkPlayIdx===i?' active':'')+'" onclick="chalkOpen('+i+')"><span class="planrow-main"><span class="planrow-title" id="chalkListName'+i+'">'+esc(pl.name||'Set play')+'</span><span class="planrow-meta">'+esc(pl.created||'')+' · '+((pl.players||[]).length)+' players</span></span><span class="planrow-side"><span class="planrow-dur" id="chalkListDur'+i+'">'+(pl.dur||10)+'s</span></span></button>'
+  return '<li><button class="planrow'+(chalkPlayIdx===i?' active':'')+'" onclick="chalkOpen('+i+')"><span class="planrow-main"><span class="planrow-title" id="chalkListName'+i+'">'+esc(pl.name||'Set play')+'</span><span class="planrow-meta">'+esc(pl.created||'')+' &middot; '+((pl.players||[]).length)+' players</span></span><span class="planrow-side"><span class="planrow-dur" id="chalkListDur'+i+'">'+(pl.dur||10)+'s</span></span></button>'
   +'<div class="row" style="padding:0 .5rem .5rem"><button class="small" onclick="chalkOpen('+i+')">Open</button><button class="small" onclick="chalkDup('+i+')">Duplicate</button><button class="small danger" onclick="chalkDel('+i+')">Delete</button></div></li>';
  }).join('')+'</ul></div>';
  return h;
@@ -1303,9 +1464,9 @@ function chalkEditorHTML(p){
  +'<div><label>Saved</label><input value="'+esc(p.created||'')+'" disabled></div></div>'
  +'<div><label>Notes</label><textarea rows="2" oninput="chalkSetNotes(this.value)">'+esc(p.notes||'')+'</textarea></div>'
  +'<div style="margin-top:1rem"><div class="chalkfield">'+chalkFieldSVG(p)+'</div>'
- +'<p class="hint">'+(chalkRouteMode==='player'?'Adding route points for '+(sel?esc(sel.label||chalkTeamName(sel.team)):'')+' — click the field to add a point. Click "Done adding" to stop.'
-  :chalkRouteMode==='ball'?'Adding ball path points — click the field to add a pass or carry point. Click "Done adding" to stop.'
-  :'Drag any player or the ball to move it. Click a player or the ball to select it, then add route points.')+'</p></div>'
+ +'<p class="hint">'+(chalkRouteMode==='player'?'Adding route points for '+(sel?esc(sel.label||chalkTeamName(sel.team)):'')+' &mdash; click the field to add a point. The point you just added is selected: drag its dot to adjust that arrow, or change its timer below, before you click to add the next one. Click "Done adding" to stop.'
+  :chalkRouteMode==='ball'?'Adding ball path points &mdash; click the field to add a pass or carry point. The point you just added is selected: drag its dot to adjust that arrow, or change its timer below, before you click to add the next one. Click "Done adding" to stop.'
+  :'Drag any player or the ball to move it. Click a player or the ball to select it, then add route points. Drag any route dot to adjust that arrow &mdash; each arrow shows its timer on the field.')+'</p></div>'
  +'<div class="row" style="margin-top:.75rem"><button id="chalkPlayBtn" class="primary" onclick="chalkTogglePlay()">'+(chalkPlaying?'Pause':'Play')+'</button>'
  +'<button onclick="chalkReset()">Reset</button>'
  +'<input id="chalkScrub" type="range" min="0" max="100" step="1" value="'+Math.round(chalkT*100)+'" oninput="chalkScrub(this.value)" style="flex:1;min-width:120px">'
@@ -1318,12 +1479,14 @@ function chalkEditorHTML(p){
  if(chalkSel==='ball'){
   h+='<div class="coachbox"><h4>Ball</h4>'
   +'<div><label style="margin-top:0">Ball carrier (sets the ball start)</label><select onchange="chalkSetCarrier(this.value)"><option value="">Loose ball</option>'
-  +(p.players||[]).map(function(pl){ return '<option value="'+pl.id+'"'+(p.ball&&p.ball.carrier===pl.id?' selected':'')+'>'+esc(pl.label||chalkTeamName(pl.team))+' — '+chalkTeamName(pl.team)+'</option>'; }).join('')
+  +(p.players||[]).map(function(pl){ return '<option value="'+pl.id+'"'+(p.ball&&p.ball.carrier===pl.id?' selected':'')+'>'+esc(pl.label||chalkTeamName(pl.team))+' &mdash; '+chalkTeamName(pl.team)+'</option>'; }).join('')
   +'</select></div>'
   +'<div class="row" style="margin-top:.75rem">'
   +(chalkRouteMode==='ball'?'<button class="primary" onclick="chalkSetRouteMode(\'ball\')">Done adding</button>':'<button onclick="chalkSetRouteMode(\'ball\')">Add ball path points</button>')
   +'<button onclick="chalkClearBallPath()">Clear ball path</button></div>'
-  +'<p class="hint">Ball path: '+((p.ball.path||[]).length)+' point'+((p.ball.path||[]).length===1?'':'s')+' — the solid line the ball follows when you press Play.</p></div>';
+  +'<p class="hint">Ball path: '+((p.ball.path||[]).length)+' point'+((p.ball.path||[]).length===1?'':'s')+' &mdash; the solid line the ball follows when you press Play.</p>'
+  +chalkRouteListHTML(p.ball.path,p.dur||10,true,{x:p.ball.x,y:p.ball.y})
+  +'</div>';
  } else if(sel){
   h+='<div class="coachbox"><h4>Selected player</h4>'
   +'<div class="grid2"><div><label style="margin-top:0">Label / number</label><input value="'+esc(sel.label||'')+'" onchange="chalkSetLabel(this.value)"></div>'
@@ -1334,21 +1497,23 @@ function chalkEditorHTML(p){
   +(chalkRouteMode==='player'?'<button class="primary" onclick="chalkSetRouteMode(\'player\')">Done adding</button>':'<button onclick="chalkSetRouteMode(\'player\')">Add route points</button>')
   +'<button onclick="chalkClearRoute()">Clear route</button>'
   +'<button class="danger" onclick="chalkRemovePlayer()">Remove player</button></div>'
-  +'<p class="hint">Route: '+((sel.route||[]).length)+' point'+((sel.route||[]).length===1?'':'s')+' — the dashed line this player runs when you press Play.</p></div>';
+  +'<p class="hint">Route: '+((sel.route||[]).length)+' point'+((sel.route||[]).length===1?'':'s')+' &mdash; the dashed line this player runs when you press Play.</p>'
+  +chalkRouteListHTML(sel.route,p.dur||10,false,{x:sel.x,y:sel.y})
+  +'</div>';
  } else {
   h+='<p class="hint">Select a player or the ball on the field to edit it, add routes, or remove it.</p>';
  }
  h+='<div class="card" style="margin:.75rem 0 0"><div class="row"><select id="chalkAddTeam" style="width:auto"><option value="A">Attack</option><option value="M">Midfield</option><option value="D">Defense</option><option value="G">Goalie</option></select><button onclick="chalkAddPlayer()">Add player</button></div>'
- +'<p class="hint">Offense is red, defense is blue, the goalie is gold. Every player can be dragged, relabeled, re-teamed, routed, or removed.</p></div>';
+ +'<p class="hint">Offense is red, defense is blue, the goalie is gold. Every player can be dragged, relabeled, re-teamed, routed, or removed. Start a play with just offense or just defense from the lineup picker at the top.</p></div>';
  h+='</div>';
  return h;
 }
 function renderChalk(){
  if(!S.chalk) S.chalk=[];
- if(chalkPlayIdx>=0&&!S.chalk[chalkPlayIdx]){ chalkPlayIdx=-1; chalkSel=null; chalkRouteMode=null; }
+ if(chalkPlayIdx>=0&&!S.chalk[chalkPlayIdx]){ chalkPlayIdx=-1; chalkSel=null; chalkRouteMode=null; chalkRouteSel=-1; }
  var p=chalkPlay();
- var h='<div class="pt6"><div class="pagehead"><h2>Chalk Talk</h2><button class="primary" onclick="chalkNewPlay()">New play</button></div>'
- +'<p class="pagesub">Build animated set plays on half a field — place the players, draw their routes and the ball path, then press Play.</p>'
+ var h='<div class="pt6"><div class="pagehead"><h2>Chalk Talk</h2><span class="row" style="margin:0"><select id="chalkNewKindTop" style="width:auto"><option value="full">Full 6v6</option><option value="offense">Offense only</option><option value="defense">Defense only</option></select><button class="primary" onclick="chalkNewPlay(document.getElementById(\'chalkNewKindTop\').value)">New play</button></span></div>'
+ +'<p class="pagesub">Build animated set plays on half a field &mdash; place the players, draw their routes and the ball path, then press Play. Drag any route dot to adjust its arrow before adding the next one, and set a timer on each arrow so routes run at different speeds.</p>'
  +'<div class="editor-grid"><div>'+(p?chalkEditorHTML(p):'<div class="card"><p class="empty-note">No play open. Create a new play or open one from the list to start drawing.</p></div>')+'</div><div>'+chalkListHTML()+'</div></div></div>';
  app.innerHTML=h;
 }
